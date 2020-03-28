@@ -1,4 +1,4 @@
-## Create cells containing Linux shells in cells in your Jupyter Notebooks
+# Insert Linux Shells inside Jupyter Notebooks
 
 ### Usage
 
