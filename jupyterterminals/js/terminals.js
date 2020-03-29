@@ -112,11 +112,13 @@ define ([
           const checkYdisp = term._core.buffer.ydisp;
           if (term.storedYdisp !== undefined) {
             if (term.storedYdisp != checkYdisp) {
-              terminals.eventsCallback({ 
-                id: term.id,
-                type: 'refresh',
-                scrollLine: checkYdisp
-              });
+              if (terminals.eventsCallback !== undefined) {
+                terminals.eventsCallback({ 
+                  id: term.id,
+                  type: 'refresh',
+                  scrollLine: checkYdisp
+                });
+              }
               //console.log('Graffiti: terminal refresh delta:', term.storedYdisp, checkYdisp);
             }
           }
@@ -574,6 +576,12 @@ define ([
 
     init: (eventsCallback) => {
       localizer.init();
+
+      utils.loadCss([
+        '/nbextensions/jupyterterminals/css/terminals.css',
+        '/nbextensions/jupyterterminals/css/xterm.css'
+      ]);
+
       terminals.discoverPwd();
       terminals.eventsCallback = eventsCallback;
     }
