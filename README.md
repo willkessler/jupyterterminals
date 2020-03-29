@@ -13,9 +13,15 @@ Any terminal cell can be "Reset" which destroys that shell and creates a new cel
 
 The shells `pwd` is set to the directory containing the current notebook.
 
-Each terminal is by default a separate bash shell, but you can also have two terminals using the same shell. As you type you will see your input appearing in both cells at once.
+Each terminal is by default a separate bash shell, but you can also
+have all terminals in a notebook use the same shell.  (As you type you
+will see your input appearing in all terminals at once.)
 
-If you don't have the plugin installed, then terminal cells will appear as markdown cells with an explanatory message on how to install the plugin in them. When you distribute notebooks with the terminal cells, the recipient will also need to install the plugin to see and use them.
+If you don't have the plugin installed, then terminal cells will
+appear as markdown cells with an explanatory message on how to install
+the plugin in them. When you distribute notebooks with the terminal
+cells, the recipient will also need to install the plugin to see and
+use them.
 
 ### Installation
 

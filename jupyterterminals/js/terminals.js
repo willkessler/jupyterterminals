@@ -1,7 +1,8 @@
 //
-// Modeled on jupyter's terminado.js, but modified a lot for Graffiti usage.
+// Modeled on jupyter's terminado.js, but modified a lot for Terminals usage.
+// Originally found in the Jupyter Graffiti project, https://github.com/willkessler/jupytergraffiti
 //
-// xterm, xterm's css and its fit addon were downloaded and put in the graffiti code base, from here:
+// xterm, xterm's css and its fit addon were downloaded and originally put in the graffiti code base, from here:
 // "xterm.js": "https://unpkg.com/xterm@~3.11.0/dist/xterm.js"
 // "xterm.js-fit": "https://unpkg.com/xterm@~3.11.0/dist/addons/fit/fit.js"
 // "xterm.js-css": "https://unpkg.com/xterm@~3.11.0/dist/xterm.css"
@@ -137,13 +138,15 @@ define ([
               term.storedYdisp = term._core.buffer.ydisp;
               //console.log('received newCharslength:', newChars.length, newChars);
               termObject.contents += newChars;
-              terminals.eventsCallback({ 
-                id: term.id,
-                scrollLine: term.storedYdisp,
-                position: termObject.contents.length,
-                focusedTerminal: terminals.focusedTerminal,
-                firstRecord: false,
-              });
+              if (terminals.eventsCallback !== undefined) {
+                terminals.eventsCallback({ 
+                  id: term.id,
+                  scrollLine: term.storedYdisp,
+                  position: termObject.contents.length,
+                  focusedTerminal: terminals.focusedTerminal,
+                  firstRecord: false,
+                });
+              }
               // console.log('termId:', terminalId,'received string of length:', json_msg[1].length, 'from server, contents now has:', termObject.contents);
               break;
             case "disconnect":
@@ -327,7 +330,7 @@ define ([
       if (terminals.renderQueue.length > 0) {
         const rq = terminals.renderQueue.shift();
         const cellId = utils.getMetadataCellId(rq.cell.metadata);
-        // console.log('Processing render queue entry:', rq);
+        console.log('Processing render queue entry, cellId:', cellId, "rq:", rq);
         terminals.createTerminalCell(cellId, rq.config);
         // make sure you can't double click this cell because that would break the terminal
         $(rq.cell.element[0]).unbind('dblclick').bind('dblclick', ((e) => { 
@@ -340,22 +343,22 @@ define ([
 
     // If there are terminals present in this notebook, render them.
     renderAllTerminals: () => {
+      utils.refreshCellMaps();
       const cells = Jupyter.notebook.get_cells();
       let cell, cellId;
       terminals.renderQueue = [];
       for (let i = 0; i < cells.length; ++i) {
         cell = cells[i];
         if (cell.cell_type === 'markdown') {
-          if (cell.metadata.hasOwnProperty('graffitiConfig')) {
-            if (cell.metadata.graffitiConfig.type === 'terminal') {
-              let config = $.extend({}, cell.metadata.graffitiConfig);
-              if ((utils.getNotebookGraffitiConfigEntry('singleTerminal') !== undefined) &&
-                  (utils.getNotebookGraffitiConfigEntry('singleTerminal') == "true")) { // note that the metadata entry has to be "true", not just true. (double quotes req'd)
-                config.terminalId = utils.getNotebookGraffitiConfigEntry('id');
-                terminals.singleCDCommand = true;
-              }
-              terminals.renderQueue.push({cell: cell, config: config });
+          if (cell.metadata.hasOwnProperty('terminalConfig')) {
+            console.log('getting all terminals config');
+            let config = $.extend({}, cell.metadata.terminalConfig);
+            if ((utils.getNotebookTerminalsConfigEntry('singleTerminal') !== undefined) &&
+                (utils.getNotebookTerminalsConfigEntry('singleTerminal') == "true")) { // note that the metadata entry has to be "true", not just true. (double quotes req'd)
+              config.terminalId = utils.getNotebookTerminalsConfigEntry('id');
+              terminals.singleCDCommand = true;
             }
+            terminals.renderQueue.push({cell: cell, config: config });
           }
         }
       }
@@ -374,7 +377,7 @@ define ([
       const newContents = opts.terminalsContents[cellId];
       let terminal = terminals.terminalsList[cellId];
       if (terminal === undefined) {
-        console.log('Graffiti: cannot find terminal', cellId, 
+        console.log('Terminals: cannot find terminal', cellId, 
                     'for sending output, trying to find next terminal from:', opts.nearestCellPosition);
         if (opts.nearestCellPosition === undefined || !opts.useNearestCellPosition) {
           return;
@@ -388,7 +391,7 @@ define ([
           checkCellId = utils.getMetadataCellId(nearestCell.metadata);
           if (terminals.terminalsList.hasOwnProperty(checkCellId)) {
             cellId = checkCellId;
-            console.log('Graffiti: We found a subsequent terminal and will write output to cell:', cellId);
+            console.log('Terminals: We found a subsequent terminal and will write output to cell:', cellId);
             break;
           }
         }
@@ -520,13 +523,13 @@ define ([
 
     refitOneTerminal: (terminal, cellId) => {
       const refitTerminal = (tryNumber) => {
-        console.log('Graffiti: Attempting to fit terminal:', cellId, ', attempt number', tryNumber);
+        console.log('Terminals: Attempting to fit terminal:', cellId, ', attempt number', tryNumber);
         terminal.term.fit();
         terminal.socket.send(JSON.stringify(["set_size", terminal.term.rows, terminal.term.cols,
                                              window.innerHeight, window.innerWidth]));
-        console.log('Graffiti: fit terminal succeeded for:', cellId);
+        console.log('Terminals: fit terminal succeeded for:', cellId);
       };
-      console.log('Graffiti: Running fit on term', terminal.term.rows, terminal.term.cols);
+      console.log('Terminals: Running fit on term', terminal.term.rows, terminal.term.cols);
       let refitAttempts = 0;
       const refitInterval = setInterval(() => {
         try {
@@ -535,10 +538,10 @@ define ([
           clearInterval(refitInterval);
         } catch (ex) {
           if (refitAttempts > terminals.maxRefitAttempts) {
-            console.log('Graffiti: unable to call fit() after', refitAttempts, 'tries, giving up.');
+            console.log('Terminals: unable to call fit() after', refitAttempts, 'tries, giving up.');
             clearInterval(refitInterval);
           } else {
-            console.log('Graffiti: unable to call fit(), trying again in', terminals.fitRetryTime, 'seconds.');
+            console.log('Terminals: unable to call fit(), trying again in', terminals.fitRetryTime, 'seconds.');
           }
         }
       }, terminals.fitRetryTime);
@@ -570,6 +573,7 @@ define ([
     },
 
     init: (eventsCallback) => {
+      localizer.init();
       terminals.discoverPwd();
       terminals.eventsCallback = eventsCallback;
     }

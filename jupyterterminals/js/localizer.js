@@ -39,7 +39,7 @@ define([
             'ENABLE_TERMINALS':                  'Enable Terminals',
             'ACTIVATE_TERMINALS':                'Activate Terminals',
             'RESET_TERMINAL':                    'Reset',
-
+            'JUMP_TO_NOTEBOOK_DIR':              'Jump to Notebook\'s Dir'
           }
           break;
         case 'CN':
@@ -47,6 +47,7 @@ define([
             'ENABLE_TERMINALS':                  '启用 Terminals',
             'ACTIVATE_TERMINALS':                '开始使用 Terminals ',
             'RESET_TERMINAL':                    'Reset',
+            'JUMP_TO_NOTEBOOK_DIR':              'Jump to Notebook\'s Dir'
           };
           break;
       }

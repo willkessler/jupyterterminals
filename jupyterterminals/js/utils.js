@@ -73,11 +73,11 @@ define([
     // These two functions help us translate between what we store in the notebook json itself ('graffitiCellId') and how we use it in the code, just as 'cellId'.
     // This was done to make our tags less likely to collide with other Jupyter plugins, but we wanted to keep the field name short in the Graffiti code.
     getMetadataCellId: (metadata) => {
-      return metadata.graffitiCellId;
+      return metadata.terminalCellId;
     },
 
     setMetadataCellId: (metadata, cellId) => {
-      metadata.graffitiCellId = cellId;
+      metadata.terminalCellId = cellId;
       return cellId;
     },
 
@@ -137,7 +137,7 @@ define([
       }
     },
 
-    composeGraffitiId: (cellId, recordingKey, activeTakeId) => {
+    composeTerminalId: (cellId, recordingKey, activeTakeId) => {
       const combinedIds = [cellId.replace('id_',''),recordingKey.replace('id_','')];
       if (activeTakeId !== undefined) {
         combinedIds.push(activeTakeId.replace('id_',''));
@@ -153,86 +153,63 @@ define([
       for (let i = 0; i < cells.length; ++i) {
         cell = cells[i];
         cellId = utils.generateUniqueId();
-        if (!cell.metadata.hasOwnProperty('graffitiCellId')) {
+        if (!cell.metadata.hasOwnProperty('terminalCellId')) {
           utils.setMetadataCellId(cell.metadata, cellId);
         }
       }
     },
 
-    assignCellGraffitiConfig: (cell, graffitiConfig) => {
-      cell.metadata['graffitiConfig'] = graffitiConfig;
+    assignCellTerminalConfig: (cell, terminalConfig) => {
+      cell.metadata['terminalConfig'] = terminalConfig;
     },
 
-    setCellGraffitiConfigEntry: (cell, key, val) => {
-      if (!cell.metadata.hasOwnProperty('graffitiConfig')) {
-        cell.metadata['graffitiConfig'] = {};
+    setCellTerminalConfigEntry: (cell, key, val) => {
+      if (!cell.metadata.hasOwnProperty('terminalConfig')) {
+        cell.metadata['terminalConfig'] = {};
       }
-      cell.metadata.graffitiConfig[key] = val;
+      cell.metadata.terminalConfig[key] = val;
     },
 
-    getCellGraffitiConfig: (cell) => {
-      if (cell.metadata.hasOwnProperty('graffitiConfig')) {
-        return cell.metadata['graffitiConfig'];
+    getCellTerminalConfig: (cell) => {
+      if (cell.metadata.hasOwnProperty('terminalConfig')) {
+        return cell.metadata['terminalConfig'];
       }
       return undefined;
     },
 
-    getCellGraffitiConfigEntry: (cell, key) => {
-      if (cell.metadata.hasOwnProperty('graffitiConfig')) {
-        if (cell.metadata.graffitiConfig.hasOwnProperty(key)) {
-          return cell.metadata.graffitiConfig[key];
+    getCellTerminalsConfigEntry: (cell, key) => {
+      if (cell.metadata.hasOwnProperty('terminalConfig')) {
+        if (cell.metadata.terminalConfig.hasOwnProperty(key)) {
+          return cell.metadata.terminalConfig[key];
         }
       }
       return undefined;
     },
 
-    getNotebookGraffitiConfigEntry: (key) => {
-      if (Jupyter.notebook.metadata.hasOwnProperty('graffiti')) {
-        return Jupyter.notebook.metadata['graffiti'][key];
+    getNotebookTerminalsConfigEntry: (key) => {
+      if (Jupyter.notebook.metadata.hasOwnProperty('terminals')) {
+        return Jupyter.notebook.metadata['terminals'][key];
       }
       return undefined;
     },
 
-    setNotebookGraffitiConfigEntry: (key, val) => {
-      if (Jupyter.notebook.metadata.hasOwnProperty('graffiti')) {
-        Jupyter.notebook.metadata['graffiti'][key] = val;
+    setNotebookTerminalConfigEntry: (key, val) => {
+      if (Jupyter.notebook.metadata.hasOwnProperty('terminals')) {
+        Jupyter.notebook.metadata['terminals'][key] = val;
       }
     },
 
-    // Also note any graffitis present in this cell, if it is a markdown cell, so that we can process their removal correctly if the user 
-    // has moved them from where they were created originally (for instance, graffiti buttons).
     refreshCellMaps: () => {
       utils.cellMaps = {
         cells: Jupyter.notebook.get_cells(),
         maps: {},
-        location: {}, // the id of the cell every graffiti is actually currently located in (may not be the cell where it was created)
       }
       let cell, cellId, cellDOM, tagsRe,graffitiId, cellKeys = Object.keys(utils.cellMaps.cells);
       for (let cellIndex = 0; cellIndex < cellKeys.length; ++cellIndex) {
         cell = utils.cellMaps.cells[cellIndex];
         cellId = utils.getMetadataCellId(cell.metadata);
-        // Support lookups by cellId.
+        // Support lookups by cellId only for jupyterterminals. Graffiti, by contrast, needs to look things up in many more ways.
         utils.cellMaps.maps[cellId] = cellIndex;
-        // Dress up the DOM  cellId so we can track selections in them (pretty much only markdown, selections in code_mirror are done through its API
-        if (cell.hasOwnProperty('inner_cell')) {
-          cellDOM = $(cell.inner_cell).parents('.cell');
-        } else if (cell.hasOwnProperty('element')) {
-          cellDOM = $(cell.element);
-        }
-        if (cellDOM !== undefined) {
-          cellDOM.attr({ 'graffiti-cell-id' : utils.getMetadataCellId(cell.metadata)});
-        }
-        if (cell.cell_type === 'markdown') {
-          const contents = cell.get_text();
-          tagsRe = utils.createGraffitiTagRegex();
-          let match, idMatch;
-          while ((match = tagsRe.exec(contents)) !== null) { 
-            idMatch = match[1].match(/graffiti-(id_.[^\-]+)-(id_[^\s]+)/);
-            graffitiId = idMatch[1] + '_' + idMatch[2];
-            utils.cellMaps.location[graffitiId] = cellId;
-          }        
-        }
-        //console.trace('cellMaps',utils.cellMaps.location);
       }
     },
 
@@ -261,39 +238,11 @@ define([
     },
 
 
-    findCellByCodeMirror: (cm) => {
-      for (let cell of utils.cellMaps.cells) {
-        if (cell.code_mirror === cm) {
-          return cell;
-        }
-      }
-      return undefined;
-    },
-    
-    findCellIndexByCodeMirror: (cm) => {
-      for (let cell of utils.cellMaps.cells) {
-        if (cell.code_mirror === cm) {
-          const cellId = utils.getMetadataCellId(cell.metadata);
-          if (cellId !== undefined) {
-            return utils.findCellIndexByCellId(cellId);
-          }
-        }
-      }
-      return undefined;
-    },
-
     selectCellByCellId: (cellId) => {
       const cellIndex = utils.findCellIndexByCellId(cellId);
       if (cellIndex !== undefined) {
         Jupyter.notebook.select(cellIndex);
       }
-    },
-
-    extractRecordingCellId: (selectedTokens) => {
-      return ((selectedTokens.tagCellId !== undefined) && 
-              (selectedTokens.tagCellId !== selectedTokens.recordingCellId) ? 
-              selectedTokens.tagCellId : 
-              selectedTokens.recordingCellId);
     },
 
     getCellRects: (cell) => {
@@ -404,381 +353,15 @@ define([
         cb = utils.saveNotebookCallbacks.shift();
         cb();
       }
-      console.log('Graffiti: Notebook saved successfully.');
+      console.log('Terminals: Notebook saved successfully.');
     },
 
     saveNotebook: () => {
       Jupyter.notebook.save_notebook().then(() => {
         utils.processSaveNotebookCallbacks();
       }).catch((ex) => {
-        console.error('Graffiti: saveNotebook caught exception:', ex);
+        console.error('Terminals: saveNotebook caught exception:', ex);
       });
-    },
-
-    // You can delete this, it's no longer needed now that we call cell.focus_cell() when we change selections
-    shrinkAllCMSelections: () => {
-      const inputCells = Jupyter.notebook.get_cells();
-      let cell,cm,selections;
-      for (let i = 0; i < inputCells.length; ++i) {
-        cell = inputCells[i];       
-        if (cell.cell_type === 'code') {
-          cm = cell.code_mirror;
-          selections = cm.listSelections();
-          if (selections.length > 0) {
-            console.log('Graffiti: Clearing selections before: selections:', selections);
-            for (let j = 0; j < selections.length; ++j) {
-              selections[j].head = $.extend({}, selections[j].anchor);
-            }
-            console.log('Graffiti: Clearing selections after: selections:', selections);
-            cm.setSelections(selections);
-          }
-        }
-      }
-    },
-
-    // Legacy
-    /*
-       collectTokenStrings: (allTokens, tokens) => {
-       const subTokens = allTokens.slice(tokens.firstTokenOffset, tokens.firstTokenOffset + tokens.extraTokens + 1);
-       return subTokens.reduce( (tokensString, token) => { tokensString + token.string } )
-       },
-     */
-
-    createGraffitiTagRegex: () => {
-      return RegExp('<span class="graffiti-highlight (graffiti-[^"]+)">(.*?)</span>','gm');
-    },
-
-    // Find out whether the current selection intersections with any graffiti token ranges, or which tokens are in the selection if not.
-    findSelectionTokens: (recordingCell,  tokenRanges, state) => {
-      //console.log('findSelectionTokens, tokenRanges:', tokenRanges);
-      let range, startRange, endRange, recording, hasMovie, recordingKey, markdown, isIntersecting = false;
-      const recordingCellId = utils.getMetadataCellId(recordingCell.metadata);
-      const recordingCellType = recordingCell.cell_type;
-      const cm = recordingCell.code_mirror;
-      const selections = cm.listSelections();
-      const firstSelection = selections[0];
-      const anchorPos = cm.indexFromPos(firstSelection.anchor);
-      const headPos = cm.indexFromPos(firstSelection.head);
-      let startPos = Math.min(anchorPos, headPos);
-      let endPos = Math.max(anchorPos, headPos);
-      let minStartRange = 1000000000;
-      const noResults = { isIntersecting: false, noTokensPresent: true };
-      let results = noResults;
-
-      if (recordingCellType === 'markdown') {
-        // If in a markdown cell, the selection "tokens" are simply the selection, but only if the selection is 2 characters or more. We do not try to use
-        // code mirror's tokenizer tools within markdown cells as there's other stuff like html in a markdown cell that could be confusing to it.
-        const contents = recordingCell.get_text();
-        let tagsRe = utils.createGraffitiTagRegex();
-        let tags = [], match, tag;
-        let idMatch;
-        while ((match = tagsRe.exec(contents)) !== null) { 
-          idMatch = match[1].match(/graffiti-(id_.[^\-]+)-(id_[^\s]+)/);
-          tags.push({
-            fullMatch: match[0],
-            recordingCellId: idMatch[1],
-            recordingKey: idMatch[2],
-            innerText: match[2],
-            startRange: match.index,
-            endRange: match.index + match[0].length
-          }); 
-        }
-
-        // Figure out if the startPs or endPos is inside an existing Graffiti in this markdown cell (intersecting).
-        if (tags.length > 0) {
-          for (tag of tags) {
-            if ( ((startPos >= tag.startRange) && (startPos <= tag.endRange)) ||
-                 ((endPos >= tag.startRange) && (endPos <= tag.endRange)) ) {
-              isIntersecting = true;
-              break;
-            }
-          }
-        }
-        if (isIntersecting) {
-          recording = state.getManifestSingleRecording(tag.recordingCellId, tag.recordingKey);
-          if (recording !== undefined) {
-            hasMovie = recording.hasMovie;
-            results = {
-              isIntersecting: true,
-              noTokensPresent: false,
-              recordingCell: recordingCell,
-              recordingCellId: recordingCellId,
-              // If the graffiti was moved around, then the cell id in its tag won't match the cell where it's found. 
-              // We store this here to detect this situation so we can track down the graffiti recording that used to be in a different cell.
-              tagCellId: tag.recordingCellId, 
-              recordingKey: tag.recordingKey, 
-              hasMovie: hasMovie,
-              allTokensString: tag.innerText,
-              markdown: tag.innerText,
-              range: {
-                start: tag.startRange,
-                end:   tag.endRange,
-              }
-            }
-          }
-        } else {
-          // Now check for a selection in the markdown cm cell.
-          if (endPos > startPos + 1) { // 2 or more chars is in the selection; this way we disallow Graffitis applied to just CR's
-            // Move startPos forward past markdown-significant characters, because if we put a graffiti around the markdown indicators, they will lose their markdown significance.
-            let skipped = false;
-            let checkChar = contents[startPos];
-            const skipChars = '#_*'; // note: we do not include backticks, even though they are significant to markdown, as we want them inside our selected text for the graffiti spans.
-            while ((skipChars.indexOf(checkChar) !== -1) && (startPos < endPos)) {
-              skipped = true;
-              startPos++;
-              checkChar = contents[startPos];
-            }
-            if (skipped && (contents[startPos] === ' ')) {
-              // skip past the space after hashtags
-              ++startPos;
-            }
-            // expand the range to include surrounding backticks
-            if (startPos > 0) {
-              if (contents[startPos - 1] === '`') {
-                startPos--;
-              }
-            }
-            if (endPos < contents.length - 1) {
-              if (contents[endPos + 1] === '`') {
-                endPos++;
-              }
-            }
-            // Backup from a cr. this may happen if the user triple clicked on a line and absorbed the cr. we don't want that.
-            //console.log('Check for backing up:-->', contents.substring(startPos,endPos), '<--');
-            //console.log('code:', contents[endPos].charCodeAt(0), 'code-1:', contents[endPos-1].charCodeAt(0));
-            while (contents[endPos-1].charCodeAt(0) === 10) {
-              //console.log('backing up, -->', contents[endPos], '<--,', contents[endPos-1].charCodeAt(0) );
-              endPos--;
-              if (endPos === startPos + 2) {
-                break;
-              }
-            }
-            //console.log('selection will be:', contents.substring(startPos,endPos), '<--', contents[endPos].charCodeAt(0));
-            results = {
-              isIntersecting: false,
-              noTokensPresent: false,
-              range: {
-                start: startPos,
-                end: endPos
-              },
-              allTokensString: cm.getSelection()
-            }
-          }
-        }
-        //console.log('final results:',results);
-      } else if (recordingCellType === 'code') {
-        // If in a code cell, try to find tokens in and around the selection.
-        if (tokenRanges[recordingCellId] !== undefined) {
-          const tokenRangesThisCell = tokenRanges[recordingCellId];
-          for (recordingKey of Object.keys(tokenRangesThisCell)) {
-            range = tokenRangesThisCell[recordingKey];
-            startRange = cm.indexFromPos(range.start);
-            endRange = cm.indexFromPos(range.end);
-            // console.log('startPos:', startPos, 'endPos:', endPos, '| startRange:', startRange, 'endRange:', endRange, 'range:', range);
-            if ((startPos <= startRange && endPos >= endRange) || // selection surrounds or equals the range
-                ((startPos >= startRange && startPos < endRange) || (endPos > startRange && endPos <= endRange))) { // selection is inside the range
-              if (startRange < minStartRange) {
-                minStartRange = startRange;
-                recording = state.getManifestSingleRecording(recordingCellId, recordingKey);
-                if (recording) {
-                  markdown = recording.markdown;
-                  hasMovie = recording.hasMovie;
-                  //console.log('found range:', range);
-                  isIntersecting = true;
-                  results = {
-                    isIntersecting: true,
-                    noTokensPresent: false,
-                    recordingCell: recordingCell,
-                    recordingCellId: recordingCellId,
-                    recordingKey: recordingKey, 
-                    markdown: markdown,
-                    hasMovie: hasMovie,
-                    range: {
-                      start: startRange,
-                      end:   endRange
-                    }
-                  }
-                };
-              }
-            }
-          }
-        }
-        if (!isIntersecting) {
-          // we didn't find a match within existing recordings. See what tokens are selected overall in that case.
-          // console.log('not intersecting, now checking for new graffiti creation');
-          const allTokens = utils.collectCMTokens(cm);
-          let startCheck, endCheck, token, startToken, endToken, lastToken, startTokenIndex, startTokenStringTrimmed, tokenCount = 0, tokensString = '';
-          if (allTokens.length === 0) {
-            // degnerate case 1: no tokens present at all in the cell
-            results = noResults;
-          } else {
-            token = allTokens[allTokens.length - 1];
-            endCheck = cm.indexFromPos({line: token.line, ch: token.end});
-            if (startPos > endCheck) {
-              // degenerate case 2: selection caret is past the last token present
-              results = noResults;
-            } else {
-              for (let i = 0; i < allTokens.length; ++i) {
-                lastToken = token;
-                token = allTokens[i];
-                startCheck = cm.indexFromPos({line: token.line, ch: token.start});
-                endCheck = cm.indexFromPos({line: token.line, ch: token.end});
-                //console.log('startPos, endPos:', startPos, endPos, 'checking token:', token.string, startCheck, endCheck);
-                if (startToken === undefined) {
-                  startTokenStringTrimmed = $.trim(token.string);
-                  if ((startTokenStringTrimmed.length > 0) &&
-                      ((startPos >= startCheck && startPos <= endCheck) ||
-                       (endPos >= startCheck && endPos <= endCheck))) {
-                    startToken = token;
-                    startTokenIndex = i;
-                    tokenCount = 1;
-                    tokensString = startToken.string;
-                    //console.log('start token:', startToken);
-                    if (startPos === endPos) {
-                      endToken = token; // the selection is zero characters long so the startToken and the endToken are the same
-                    }
-                  }
-                } else if (!(startCheck >= endPos)) { // scan forward for the ending token
-                  endToken = token;
-                  tokenCount++;
-                  tokensString += token.string;
-                  //console.log('end token:', endToken);
-                }
-                if (startCheck > endPos) {
-                  if (startToken === undefined && lastToken !== undefined) {
-                    console.log('Graffiti: between tokens, so cannot create a Graffiti.');
-                    results = noResults;
-                  }
-                  break;
-                }
-              }
-              
-              // Find the occurence count of the first token in the code cell, e.g. if the token is the second "hello" in "hello there, mr. hello dude"
-              if (startToken === undefined) {
-                results = noResults;
-                console.log('Graffiti: degenerate case 3, startToken not found despite everything. Falling to safe route.');
-              } else {
-                //console.log('Graffiti: startPos, endPos:', startPos, endPos, 'startToken,endToken:', startToken,endToken);
-                startToken.offset = 0;
-                for (let i = 0; i < allTokens.length; ++i) {
-                  token = allTokens[i];
-                  if (token.type === startToken.type && token.string === startToken.string) {
-                    if (i < startTokenIndex) {
-                     ++startToken.offset;
-                    } else {
-                      break;
-                    }
-                  }
-                }
-
-                if (endToken === undefined) {
-                  console.log('Graffiti: degenerate case 4, endToken not found. Falling to safe route.');
-                  endToken = startToken; // degenerate case 4: never found an end token, assume just one token. not sure why this happens yet 8/20/18
-                }
-
-                results = {
-                  isIntersecting: false,
-                  noTokensPresent: false,
-                  tokens: {
-                    start: {
-                      type: startToken.type,
-                      string: startToken.string,
-                      offset: startToken.offset
-                    },
-                    count: tokenCount
-                  },
-                  allTokensString: tokensString,
-                  range: {
-                    start: cm.indexFromPos({line:startToken.line, ch: startToken.ch}),
-                    end:   cm.indexFromPos({line:endToken.line, ch: endToken.ch}),
-                    selectionStart: startPos,
-                    selectionEnd: endPos
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      //console.log('findIntersectingRange results:', results);
-      return results;
-    },
-
-    // Collect all tokens in code-mirror into an array and tag each with which line it's found on. We use this 
-    // in refreshGraffitiHighlights() as we mark up a cell with existing recorded graffitis.
-    collectCMTokens: (cm) => {
-      let allTokens = [];
-      const lineCount = cm.lineCount();
-      for (let i = 0; i < lineCount; ++i) {
-        lineTokens = cm.getLineTokens(i);
-        for (let j of Object.keys(lineTokens)) {
-          lineTokens[j].line = i;
-        }
-        allTokens = allTokens.concat(lineTokens);
-      }
-      return allTokens;
-    },
-
-    // Given a start token string and a tokenOffset, and how many subsequent tokens are needed, pull the line and character ranges
-    // out of the given code mirror instance (since those ranges might have changed since the graffiti was first created).
-    getCMTokenRange: (cm, tokens, allTokens) => {
-      const startToken = tokens.start;
-      if (startToken === undefined) {
-        return undefined; // couldn't find start token, degenerate case, can only happen if a graffiti has a corrupted startToken.
-      }
-      const allTokensLength = allTokens.length;
-      let i, tokenCounter = 0, lineTokens, token, firstTokenPosition;
-      for (i = 0; i < allTokensLength; ++i) {
-        token = allTokens[i];
-        if ((token.string === startToken.string) && (token.type === startToken.type)) {
-          if (tokenCounter === startToken.offset) {
-            firstTokenPosition = i;
-            break;
-          } else {
-            ++tokenCounter;
-          }
-        }
-      }
-      if (firstTokenPosition === undefined) {
-        return undefined; // couldn't find first token
-      }
-      const lastTokenPosition = Math.min(allTokensLength - 1, firstTokenPosition + tokens.count - 1);
-      const firstToken = allTokens[firstTokenPosition];
-      const lastToken = allTokens[lastTokenPosition];
-
-      return {
-        start: {
-          line: firstToken.line, ch: firstToken.start
-        },
-        end: {
-          line: lastToken.line, ch: lastToken.end
-        }
-      };
-    },
-
-    cleanSelectionRecord: (rec) => {
-      return {
-        anchor: { 
-          ch: rec.anchor.ch,
-          line: rec.anchor.line
-        },
-        head: {
-          ch: rec.head.ch,
-          line: rec.head.line
-        }
-      }
-    },
-
-    cleanSelectionRecords: (recs) => {
-      let cleanedRecs = [];
-      if (recs.length === 0) {
-        return cleanedRecs;
-      }
-      for (let i = 0; i < recs.length; ++i) {
-        cleanedRecs.push(utils.cleanSelectionRecord(recs[i]));
-      }
-      return cleanedRecs;
     },
 
     //
@@ -938,3 +521,6 @@ define([
 
   return(utils);
 });
+
+
+
