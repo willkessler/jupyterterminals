@@ -99,7 +99,7 @@ define ([
         // });
 
         term.on('focus', () => { 
-          //console.log('Graffiti: terminal ' + term.id + ' focused');
+          //console.log('Terminals: terminal ' + term.id + ' focused');
           terminals.focusedTerminal = term.id;
         });
 
@@ -119,7 +119,7 @@ define ([
                   scrollLine: checkYdisp
                 });
               }
-              //console.log('Graffiti: terminal refresh delta:', term.storedYdisp, checkYdisp);
+              //console.log('Terminals: terminal refresh delta:', term.storedYdisp, checkYdisp);
             }
           }
           term.storedYdisp = term._core.buffer.ydisp;
@@ -218,7 +218,7 @@ define ([
         renderArea.find('.graffiti-terminal-reset').click((e) => {
           const target = $(e.target);
           const cellDOM = target.parents('.cell');
-          const cellId = cellDOM.attr('graffiti-cell-id');
+          const cellId = cellDOM.attr('terminal-cell-id');
           terminals.resetTerminalCell(cellId);
         });
 
@@ -271,7 +271,7 @@ define ([
           terminalId: terminalId, // defaults to the graffiti cell id, but can be changed if author wants to display the same terminal twice in one notebook.
           rows: rows, 
         };
-        utils.assignCellGraffitiConfig(cell, graffitiConfig);
+        utils.assignCellTerminalConfig(cell, graffitiConfig);
         utils.selectCellByCellId(cellId);
         cell.set_text('<i>Loading terminal (' + cellId + '), please wait...</i>');
         cell.render();
@@ -292,7 +292,7 @@ define ([
       if (terminals.terminalsList[cellId] !== undefined) {
         const fetchParams = { method: 'delete', credentials: 'include',  };
         const cell = utils.findCellByCellId(cellId);
-        const graffitiConfig = utils.getCellGraffitiConfig(cell);
+        const graffitiConfig = utils.getCellTerminalConfig(cell);
         if (graffitiConfig !== undefined) {
           const deleteAPIEndpoint = location.origin + '/api/terminals/' + graffitiConfig.terminalId;
           const settings = { 
@@ -302,7 +302,7 @@ define ([
             type : "DELETE",
             dataType : "json",
             success : function () {
-              console.log('Graffiti: successful terminal delete.');
+              console.log('Terminals: successful terminal delete.');
             },
             error : utils.log_ajax_error,
           };

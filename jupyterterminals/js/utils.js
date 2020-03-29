@@ -202,14 +202,26 @@ define([
     refreshCellMaps: () => {
       utils.cellMaps = {
         cells: Jupyter.notebook.get_cells(),
-        maps: {},
+        maps: {}
       }
       let cell, cellId, cellDOM, tagsRe,graffitiId, cellKeys = Object.keys(utils.cellMaps.cells);
       for (let cellIndex = 0; cellIndex < cellKeys.length; ++cellIndex) {
         cell = utils.cellMaps.cells[cellIndex];
         cellId = utils.getMetadataCellId(cell.metadata);
-        // Support lookups by cellId only for jupyterterminals. Graffiti, by contrast, needs to look things up in many more ways.
+        // Support lookups by cellId only for jupyterterminals. 
+        // (Graffiti, by contrast, needs to look things up in many more ways.)
         utils.cellMaps.maps[cellId] = cellIndex;
+        // Support lookups by cellId.
+        utils.cellMaps.maps[cellId] = cellIndex;
+        // Dress up the DOM with a cellId so we can reset terminals
+        if (cell.hasOwnProperty('inner_cell')) {
+          cellDOM = $(cell.inner_cell).parents('.cell');
+        } else if (cell.hasOwnProperty('element')) {
+          cellDOM = $(cell.element);
+        }
+        if (cellDOM !== undefined) {
+          cellDOM.attr({ 'terminal-cell-id' : utils.getMetadataCellId(cell.metadata)});
+        }
       }
     },
 
