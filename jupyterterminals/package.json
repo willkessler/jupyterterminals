@@ -9,12 +9,17 @@
   "author": "Will Kessler",
   "license": "MIT",
   "dependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.0",
+    "@babel/register": "^7.9.0",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-rename": "^2.0.0",
+    "gulp-replace": "^1.0.0",
     "gulp-string-replace": "^1.1.2",
     "gulp-strip-debug": "^3.0.0",
+    "gulp-uglify": "^3.0.2",
     "lodash": "^4.17.15",
     "merge-stream": "^2.0.0",
     "requirejs": "^2.3.6"

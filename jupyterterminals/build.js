@@ -9,7 +9,7 @@
         "components/marked": "empty:",
         "notebook/js": "empty:"
     },
-    out: "graffiti-dist/graffiti.js",
+    out: "terminals-dist/terminals.js",
     findNestedDependencies: true,
     // Useful in dev
     // optimize: "none",
