@@ -192,7 +192,7 @@ define ([
                         '  <span id="dummy-screen-rows" style="font-family:courier; font-weight:bold; font-size:15px;">bash-3.2$ </span>' +
                         '</div>');
         const lineHeight = renderArea.find('#dummy-screen-rows').height();
-        renderArea.html('Loading...');
+        renderArea.html('Loading...' + localizer.getString('EXPLAIN_NON_LOAD'));
 
         const terminalHeight = lineHeight * config.rows; // pixels
         const terminalContainerId = 'graffiti-terminal-container-' + cellId;
@@ -273,7 +273,7 @@ define ([
         };
         utils.assignCellTerminalConfig(cell, graffitiConfig);
         utils.selectCellByCellId(cellId);
-        cell.set_text('<i>Loading terminal (' + cellId + '), please wait...</i>');
+        cell.set_text('<i>Loading terminal (' + cellId + '), please wait... ' + localizer.getString('EXPLAIN_NON_LOAD'));
         cell.render();
         return terminals.createTerminalCell(cellId, graffitiConfig);
       }
@@ -574,6 +574,20 @@ define ([
       }
     },
 
+    handleKeydown: (e) => {
+      if (terminals.getFocusedTerminal() !== undefined) {
+        // Let any focused terminal handle this event. Don't let jupyter (or anybody else) get it. 
+        e.stopPropagation(); 
+        return true;
+      }
+    },
+
+    setupKeyboardHandlers: () => {
+      $('body').keydown((e) => {
+        return terminals.handleKeydown(e);
+      });
+    },
+
     init: (eventsCallback) => {
       localizer.init();
 
@@ -582,6 +596,7 @@ define ([
         '/nbextensions/jupyterterminals/css/xterm.css'
       ]);
 
+      terminals.setupKeyboardHandlers();
       terminals.discoverPwd();
       terminals.eventsCallback = eventsCallback;
     }

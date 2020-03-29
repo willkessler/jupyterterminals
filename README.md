@@ -35,6 +35,13 @@ or
 
 ### Related Software
 
-Jupyter Terminals are included by default in Jupyter Graffiti, which allows you to also add popup tips to any text in your notebook and create interactive screen recordings to help you teach topics using Jupyter Notebooks.  While you can install both Jupyter Terminals and Jupyter Graffiti at one time, it's not advised; use one or the other.  Take a look at Jupyter Graffiti to learn more about what it can do for you!
+Inlined Terminals are included by default in Jupyter Graffiti, which
+also allows you to add popup tips to any text in your notebook, and
+create interactive screen recordings to help you teach topics using
+Jupyter Notebooks.
 
+Take a look at Jupyter Graffiti to learn more about what it can do for
+you!
+
+(Do not use Jupyter Terminals and Jupyter Graffiti at the same time: they will conflict.)
 
