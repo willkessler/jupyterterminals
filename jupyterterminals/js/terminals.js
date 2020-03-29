@@ -24,6 +24,24 @@ define ([
     CDCommandCount: 0,
     terminalsList: {},
 
+    renderTerminalHtml: (opts) => {
+      const height = parseInt(opts.width * 0.9);
+      const terminalHtml = '<div class="terminal-icon" style="width:' + opts.width + 'px;height:' + height + 'px;">' +
+                           '&gt;_' +
+                           '</div>';
+      return terminalHtml;
+    },
+
+    setupTerminalInsertButton: () => {
+      const notebook = Jupyter.notebook;
+      const terminalHtml = terminals.renderTerminalHtml({width:20});
+      const buttonContents = '<div id="terminal-insert-button" class="btn-group"><button class="btn btn-default" title="' + 
+                             localizer.getString('INSERT_TERMINAL') + '">';
+      const setupButtonDiv = $(buttonContents + '<span>' + terminalHtml + '</div></button></span>');
+      const jupyterMainToolbar = $('#maintoolbar-container');
+      setupButtonDiv.appendTo(jupyterMainToolbar);
+    },
+
     discoverPwd: () => {
       Jupyter.notebook.kernel.execute(
         'pwd',
@@ -596,6 +614,7 @@ define ([
         '/nbextensions/jupyterterminals/css/xterm.css'
       ]);
 
+      terminals.setupTerminalInsertButton();
       terminals.setupKeyboardHandlers();
       terminals.discoverPwd();
       terminals.eventsCallback = eventsCallback;

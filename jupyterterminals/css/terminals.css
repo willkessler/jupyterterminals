@@ -1,3 +1,13 @@
+.terminal-icon {
+  border-radius:2px;
+  background:#000;
+  color:#fff;
+  font-size:0.9em;
+  font-weight:bold;
+  cursor:pointer;
+  padding:2px 0 0 0px;
+}
+
 .graffiti-terminal-container {
   border: 1px solid #cfcfcf;
 }
@@ -19,7 +29,7 @@
   border-top:1px dotted grey;
 }
 
-#graffiti-terminal-builder button,
+#graffiti-terminal-builder button {
   font-size:0.8em;
   padding:2px;
 }

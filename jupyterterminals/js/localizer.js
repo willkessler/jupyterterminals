@@ -36,8 +36,7 @@ define([
       switch (locale) {
         case 'EN':
           localizer.translations['EN'] = {
-            'ENABLE_TERMINALS':                  'Enable Terminals',
-            'ACTIVATE_TERMINALS':                'Activate Terminals',
+            'INSERT_TERMINAL':                   'Insert a Terminal',
             'RESET_TERMINAL':                    'Reset',
             'JUMP_TO_NOTEBOOK_DIR':              'Jump to Notebook\'s Dir',
             'EXPLAIN_NON_LOAD':                  'If you do not see an interactive terminal here eventually, you may need to install the jupyterterminals extension, see:' +
@@ -45,9 +44,9 @@ define([
           }
           break;
         case 'CN':
+          // If anybody wants to help localize to Chinese here, i'd appreciate the help
           localizer.translations['CN'] = {          
-            'ENABLE_TERMINALS':                  '启用 Terminals',
-            'ACTIVATE_TERMINALS':                '开始使用 Terminals ',
+            'INSERT_TERMINAL':                   'Insert a Terminal',
             'RESET_TERMINAL':                    'Reset',
             'JUMP_TO_NOTEBOOK_DIR':              'Jump to Notebook\'s Dir',
             'EXPLAIN_NON_LOAD':                  'If you do not see an interactive terminal here eventually, you may need to install the jupyterterminals extension, see:' +
