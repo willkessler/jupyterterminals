@@ -4,13 +4,14 @@
 
 define([
   'base/js/namespace',
-  'jupyterterminals/js/terminals.js',
-  'jupyterterminals/js/utils.js',
+  '/nbextensions/jupyterterminals/js/terminals.js',
+  '/nbextensions/jupyterterminals/js/utils.js',
 ], (Jupyter, Terminals, utils) => {
   console.log('JupyterTerminals loaded:', Terminals);
 
   const initTerminals = () => { 
-    console.log('initTerminals ran.');
+    Terminals.init();
+    console.log('initTerminals just ran.');
   }
 
   // This ensures Jupyter.kernel.execute works
