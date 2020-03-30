@@ -24,6 +24,8 @@ define ([
     focusedTerminal: undefined,
     discoveredPwd: undefined,
     singleCDCommand: false,
+    defaultTerminalRows: 6,
+    defaultTerminalInitialCommand: '',
     fitRetryTime: 1000,
     maxRefitAttempts: 10,
     CDCommandCount: 0,
@@ -195,6 +197,7 @@ define ([
 
     createControlButton: (cellId) => {
       console.log('createControlButton at cellId:',cellId);
+      utils.refreshCellMaps();
       const cellIndex = utils.findCellIndexByCellId(cellId);
       const cells = Jupyter.notebook.get_cells();
       let nextCell;
@@ -318,17 +321,18 @@ define ([
       if (cellId !== undefined) {
         const notebookDirectory = utils.getNotebookDirectory();
         const rows = (desiredRows === undefined ? 6 : desiredRows); // default is 6 rows but can be changed by metadata
-        const graffitiConfig = {
+        const terminalConfig = {
           type : 'terminal',
+          terminalId: terminalId, // defaults to the terminal cell id, but can be changed if author wants to display the same terminal twice in one notebook.
           startingDirectory: notebookDirectory,
-          terminalId: terminalId, // defaults to the graffiti cell id, but can be changed if author wants to display the same terminal twice in one notebook.
+          initialCommand: terminals.defaultTerminalInitialCommand,
           rows: rows, 
         };
-        utils.assignCellTerminalConfig(cell, graffitiConfig);
+        utils.assignCellTerminalConfig(cell, terminalConfig);
         utils.selectCellByCellId(cellId);
         cell.set_text('<i>Loading terminal (' + cellId + '), please wait... ' + localizer.getString('EXPLAIN_NON_LOAD'));
         cell.render();
-        return terminals.createTerminalCell(cellId, graffitiConfig);
+        return terminals.createTerminalCell(cellId, terminalConfig);
       }
     },
 
@@ -345,9 +349,9 @@ define ([
       if (terminals.terminalsList[cellId] !== undefined) {
         const fetchParams = { method: 'delete', credentials: 'include',  };
         const cell = utils.findCellByCellId(cellId);
-        const graffitiConfig = utils.getCellTerminalConfig(cell);
-        if (graffitiConfig !== undefined) {
-          const deleteAPIEndpoint = location.origin + '/api/terminals/' + graffitiConfig.terminalId;
+        const terminalConfig = utils.getCellTerminalConfig(cell);
+        if (terminalConfig !== undefined) {
+          const deleteAPIEndpoint = location.origin + '/api/terminals/' + terminalConfig.terminalId;
           const settings = { 
             // liberally cribbed from jupyter's codebase,
             // https://github.com/jupyter/notebook/blob/b8b66332e2023e83d2ee04f83d8814f567e01a4e/notebook/static/tree/js/terminallist.js#L110
@@ -376,7 +380,7 @@ define ([
     createTerminalCellBelowSelectedCell: () => {
       const newTerminalCell = Jupyter.notebook.insert_cell_below('markdown');
       if (newTerminalCell !== undefined) {
-        return terminals.createTerminalInCell(newTerminalCell, utils.generateUniqueId(), 6 );
+        return terminals.createTerminalInCell(newTerminalCell, utils.generateUniqueId(), terminals.defaultTerminalRows );
       }
       return undefined;
     },

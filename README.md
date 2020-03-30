@@ -2,9 +2,9 @@
 
 ### Usage
 
-With this plugin, you can insert terminal cells (shells) using a button added to your Jupyter toolbar.  You can remove them by just deleting the cell (it's a markdown cell the plugin modifies to instead display a terminal).
+With this plugin, you can insert terminal cells (shells) using a button added to your Jupyter toolbar.
 
-For any terminal cell, by adjusting the metadata for that cell, you can :
+For any terminal cell, by editing the metadata for that cell, you can :
 
 1. Set the number of lines of text displayed (and thereby, height of the cell)
 1. Set an initial command to run when the terminal is opened.
@@ -12,11 +12,13 @@ For any terminal cell, by adjusting the metadata for that cell, you can :
 Any terminal cell can be "Reset" which destroys that shell and creates a new cell, via a link under the cell.
 
 The shells `pwd` is set to the directory containing the current
-notebook. If you click the "Jump to Notebook's Dir" you can make the
+notebook. If you click the "Jump to Notebook's Dir" link you can make the
 terminal go back to the directory where the notebook is located.
 
 If the terminal locks up somehow, just click the "Reset" link to get a
 new Terminal in that cell.
+
+You can remove Terminal cells by just deleting them.
 
 Each terminal cell is connected to a separate bash shell. You can see
 these terminals in Jupyter's "Running" tab.  If you reload the
@@ -59,4 +61,3 @@ Take a look at Jupyter Graffiti to learn more about what it can do for
 you!
 
 (Do not use Jupyter Terminals and Jupyter Graffiti at the same time: they will conflict.)
-
