@@ -39,6 +39,7 @@ define([
             'INSERT_TERMINAL':                   'Insert a Terminal',
             'RESET_TERMINAL':                    'Reset',
             'JUMP_TO_NOTEBOOK_DIR':              'Jump to Notebook\'s Dir',
+            'CREATE_CONTROL_BUTTON':             'Create Control Button',
             'EXPLAIN_NON_LOAD':                  'If you do not see an interactive terminal here eventually, you may need to install the JupyterTerminals extension, see:' +
                                                  ' https://github.com/willkessler/jupyterterminals</i>',
           }
@@ -49,6 +50,7 @@ define([
             'INSERT_TERMINAL':                   'Insert a Terminal',
             'RESET_TERMINAL':                    'Reset',
             'JUMP_TO_NOTEBOOK_DIR':              'Jump to Notebook\'s Dir',
+            'CREATE_CONTROL_BUTTON':             'Create Control Button',
             'EXPLAIN_NON_LOAD':                  'If you do not see an interactive terminal here eventually, you may need to install the JupyterTerminals extension, see:' +
                                                  ' https://github.com/willkessler/jupyterterminals</i>',
           };

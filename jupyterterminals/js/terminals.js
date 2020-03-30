@@ -37,19 +37,6 @@ define ([
       return terminalHtml;
     },
 
-    setupTerminalInsertButton: () => {
-      const notebook = Jupyter.notebook;
-      const terminalHtml = terminals.renderTerminalHtml({width:20});
-      const buttonContents = '<div id="terminal-insert-button" class="btn-group"><button class="btn btn-default" title="' + 
-                             localizer.getString('INSERT_TERMINAL') + '">';
-      const setupButtonDiv = $(buttonContents + '<span>' + terminalHtml + '</div></button></span>');
-      const jupyterMainToolbar = $('#maintoolbar-container');
-      setupButtonDiv.appendTo(jupyterMainToolbar);
-      setupButtonDiv.click(() => {
-        console.log('Terminals: Creating terminal cell.');
-        terminals.createTerminalCellBelowSelectedCell();
-      });
-    },
 
     discoverPwd: () => {
       Jupyter.notebook.kernel.execute(
@@ -206,6 +193,31 @@ define ([
       return contentsPortion;
     },
 
+    createControlButton: (cellId) => {
+      console.log('createControlButton at cellId:',cellId);
+      const cellIndex = utils.findCellIndexByCellId(cellId);
+      const cells = Jupyter.notebook.get_cells();
+      let nextCell;
+      if (cellIndex === cells.length - 1) {
+        // We are on last cell, so we need to add a markdown cell below for the button
+        nextCell = Jupyter.notebook.insert_cell_at_bottom('markdown');
+      } else {
+        // Check the very next cell. if it is a markdown cell, just add the button to its contents. If not, insert a markdown cell before the next cell.
+        const nextCellIndex = cellIndex + 1;
+        nextCell = Jupyter.notebook.get_cell(nextCellIndex);
+        // Make sure the next cell isn't a markdown cell or terminal cell. In those cases, we need to insert a cell between.
+        if ((nextCell.cell_type !== 'markdown') || (utils.getMetadataCellId(nextCell.metadata) !== undefined)) {
+          nextCell = Jupyter.notebook.insert_cell_above('markdown', nextCellIndex);
+        }
+      }
+      const cellContents = nextCell.get_text();
+      const rawButtonMarkdown = '<button>Button</button>';
+      const newCellContents = rawButtonMarkdown + cellContents;
+      nextCell.set_text(newCellContents);
+      nextCell.render();
+      utils.refreshCellMaps();
+    },
+
     createTerminalCell: (cellId, config) => {
       if (terminals.terminalsList.hasOwnProperty(cellId)) {
         return terminals.terminalsList[cellId]; // already have this terminal set up
@@ -226,6 +238,9 @@ define ([
 
         renderArea.html('<div class="graffiti-terminal-container" id="' + terminalContainerId + '" class="container" style="width:100%;height:' + terminalHeight + 'px;"></div>' +
                         '<div class="graffiti-terminal-links">' +
+                           (terminals.createMode ? 
+                            ' <div class="graffiti-terminal-button-create">' + localizer.getString('CREATE_CONTROL_BUTTON') + '</div>' :
+                            '') +
                         ' <div class="graffiti-terminal-go-notebook-dir">' + localizer.getString('JUMP_TO_NOTEBOOK_DIR') + '</div>' +
                         ' <div class="graffiti-terminal-reset">' + localizer.getString('RESET_TERMINAL') + '</div>' +
                         '</div>').show();
@@ -248,6 +263,15 @@ define ([
           const cellId = cellDOM.attr('terminal-cell-id');
           terminals.resetTerminalCell(cellId);
         });
+
+        if (terminals.createMode) {
+          renderArea.find('.graffiti-terminal-button-create').click((e) => {
+            const target = $(e.target);
+            const cellDOM = target.parents('.cell');
+            const cellId = cellDOM.attr('terminal-cell-id');
+            terminals.createControlButton(cellId);
+          });          
+        }
 
         renderArea.find('.graffiti-terminal-container').bind('mousewheel', (e) => {
           //console.log('xterm mousewheel',e.originalEvent.wheelDeltaY); // looks like values about 10 move one line...
@@ -614,6 +638,20 @@ define ([
       }
     },
 
+    setupTerminalInsertButton: () => {
+      const notebook = Jupyter.notebook;
+      const terminalHtml = terminals.renderTerminalHtml({width:20});
+      const buttonContents = '<div id="terminal-insert-button" class="btn-group"><button class="btn btn-default" title="' + 
+                             localizer.getString('INSERT_TERMINAL') + '">';
+      const setupButtonDiv = $(buttonContents + '<span>' + terminalHtml + '</div></button></span>');
+      const jupyterMainToolbar = $('#maintoolbar-container');
+      setupButtonDiv.appendTo(jupyterMainToolbar);
+      setupButtonDiv.click(() => {
+        console.log('Terminals: Creating terminal cell.');
+        terminals.createTerminalCellBelowSelectedCell();
+      });
+    },
+
     setupKeyboardHandlers: () => {
       $('body').keydown((e) => {
         return terminals.handleKeydown(e);
@@ -631,6 +669,7 @@ define ([
       terminals.setupTerminalInsertButton();
       terminals.setupKeyboardHandlers();
       terminals.discoverPwd();
+      terminals.createMode = true; // to be controlled by notebook metadata shortly
       terminals.eventsCallback = eventsCallback;
     }
 

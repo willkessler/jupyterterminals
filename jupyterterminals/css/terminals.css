@@ -12,6 +12,9 @@
   border: 1px solid #cfcfcf;
 }
 
+.graffiti-terminal-button-create {
+}
+
 .graffiti-terminal-links {
   display:flex;
   justify-content:flex-end;
