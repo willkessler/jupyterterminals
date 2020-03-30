@@ -39,7 +39,7 @@ define([
             'INSERT_TERMINAL':                   'Insert a Terminal',
             'RESET_TERMINAL':                    'Reset',
             'JUMP_TO_NOTEBOOK_DIR':              'Jump to Notebook\'s Dir',
-            'EXPLAIN_NON_LOAD':                  'If you do not see an interactive terminal here eventually, you may need to install the jupyterterminals extension, see:' +
+            'EXPLAIN_NON_LOAD':                  'If you do not see an interactive terminal here eventually, you may need to install the JupyterTerminals extension, see:' +
                                                  ' https://github.com/willkessler/jupyterterminals</i>',
           }
           break;
@@ -49,7 +49,7 @@ define([
             'INSERT_TERMINAL':                   'Insert a Terminal',
             'RESET_TERMINAL':                    'Reset',
             'JUMP_TO_NOTEBOOK_DIR':              'Jump to Notebook\'s Dir',
-            'EXPLAIN_NON_LOAD':                  'If you do not see an interactive terminal here eventually, you may need to install the jupyterterminals extension, see:' +
+            'EXPLAIN_NON_LOAD':                  'If you do not see an interactive terminal here eventually, you may need to install the JupyterTerminals extension, see:' +
                                                  ' https://github.com/willkessler/jupyterterminals</i>',
           };
           break;

@@ -7,6 +7,11 @@
 // "xterm.js-fit": "https://unpkg.com/xterm@~3.11.0/dist/addons/fit/fit.js"
 // "xterm.js-css": "https://unpkg.com/xterm@~3.11.0/dist/xterm.css"
 
+// TODO:
+// if cell gets deleted, destroy the term (?)
+// add the buttons below terms or ALERT if a terminal cell is not selected already
+
+
 define ([
   'base/js/utils',
   '/nbextensions/jupyterterminals/js/utils.js',
@@ -40,6 +45,10 @@ define ([
       const setupButtonDiv = $(buttonContents + '<span>' + terminalHtml + '</div></button></span>');
       const jupyterMainToolbar = $('#maintoolbar-container');
       setupButtonDiv.appendTo(jupyterMainToolbar);
+      setupButtonDiv.click(() => {
+        console.log('Terminals: Creating terminal cell.');
+        terminals.createTerminalCellBelowSelectedCell();
+      });
     },
 
     discoverPwd: () => {
@@ -276,6 +285,8 @@ define ([
     },
 
     createTerminalInCell: (cell, terminalId, desiredRows) => {
+      utils.assignCellId(cell); // make sure a new cell has a terminal cell id.
+      utils.refreshCellMaps();
       const cellId = utils.getMetadataCellId(cell.metadata);
       if (terminalId === undefined) {
         terminalId = cellId;
@@ -338,10 +349,10 @@ define ([
       delete(terminals.terminalsList[cellId]);
     },
 
-    createTerminalCellAboveSelectedCell: () => {
-      const newTerminalCell = Jupyter.notebook.insert_cell_above('markdown');
+    createTerminalCellBelowSelectedCell: () => {
+      const newTerminalCell = Jupyter.notebook.insert_cell_below('markdown');
       if (newTerminalCell !== undefined) {
-        return terminals.createTerminalInCell(newTerminalCell);
+        return terminals.createTerminalInCell(newTerminalCell, utils.generateUniqueId(), 6 );
       }
       return undefined;
     },
@@ -350,7 +361,7 @@ define ([
       if (terminals.renderQueue.length > 0) {
         const rq = terminals.renderQueue.shift();
         const cellId = utils.getMetadataCellId(rq.cell.metadata);
-        console.log('Processing render queue entry, cellId:', cellId, "rq:", rq);
+        // console.log('Terminals: Processing render queue entry, cellId:', cellId, "rq:", rq);
         terminals.createTerminalCell(cellId, rq.config);
         // make sure you can't double click this cell because that would break the terminal
         $(rq.cell.element[0]).unbind('dblclick').bind('dblclick', ((e) => { 
@@ -358,6 +369,20 @@ define ([
           return false;
         }));
         setTimeout(terminals.processRenderQueue, 250);
+      }
+    },
+
+    renderOneTerminal: (cell) => {
+      if (cell.cell_type === 'markdown') {
+        if (cell.metadata.hasOwnProperty('terminalConfig')) {
+          let config = $.extend({}, cell.metadata.terminalConfig);
+          if ((utils.getNotebookTerminalsConfigEntry('singleTerminal') !== undefined) &&
+              (utils.getNotebookTerminalsConfigEntry('singleTerminal') == "true")) { // note that the metadata entry has to be "true", not just true. (double quotes req'd)
+            config.terminalId = utils.getNotebookTerminalsConfigEntry('id');
+            terminals.singleCDCommand = true;
+          }
+          terminals.renderQueue.push({cell: cell, config: config });
+        }
       }
     },
 
@@ -369,18 +394,7 @@ define ([
       terminals.renderQueue = [];
       for (let i = 0; i < cells.length; ++i) {
         cell = cells[i];
-        if (cell.cell_type === 'markdown') {
-          if (cell.metadata.hasOwnProperty('terminalConfig')) {
-            console.log('getting all terminals config');
-            let config = $.extend({}, cell.metadata.terminalConfig);
-            if ((utils.getNotebookTerminalsConfigEntry('singleTerminal') !== undefined) &&
-                (utils.getNotebookTerminalsConfigEntry('singleTerminal') == "true")) { // note that the metadata entry has to be "true", not just true. (double quotes req'd)
-              config.terminalId = utils.getNotebookTerminalsConfigEntry('id');
-              terminals.singleCDCommand = true;
-            }
-            terminals.renderQueue.push({cell: cell, config: config });
-          }
-        }
+        terminals.renderOneTerminal(cell);
       }
       terminals.processRenderQueue();
     },

@@ -146,16 +146,11 @@ define([
       return combinedIdStr;
     },
 
-    // Assign cellIds to any cells that don't have them yet.
-    assignCellIds: () => {
-      const cells = Jupyter.notebook.get_cells();
-      let cell, cellId, i;
-      for (let i = 0; i < cells.length; ++i) {
-        cell = cells[i];
-        cellId = utils.generateUniqueId();
-        if (!cell.metadata.hasOwnProperty('terminalCellId')) {
-          utils.setMetadataCellId(cell.metadata, cellId);
-        }
+    // Assign terminal cellIds to any cells that doesn't have one.
+    assignCellId: (cell) => {
+      const cellId = utils.generateUniqueId();
+      if (!cell.metadata.hasOwnProperty('terminalCellId')) {
+        utils.setMetadataCellId(cell.metadata, cellId);
       }
     },
 
