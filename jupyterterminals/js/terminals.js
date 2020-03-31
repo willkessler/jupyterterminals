@@ -208,16 +208,29 @@ define ([
         // Check the very next cell. if it is a markdown cell, just add the button to its contents. If not, insert a markdown cell before the next cell.
         const nextCellIndex = cellIndex + 1;
         nextCell = Jupyter.notebook.get_cell(nextCellIndex);
-        // Make sure the next cell isn't a markdown cell or terminal cell. In those cases, we need to insert a cell between.
-        if ((nextCell.cell_type !== 'markdown') || (utils.getMetadataCellId(nextCell.metadata) !== undefined)) {
+        // Make sure the next cell is a markdown cell, where we can insert a button. If it's a code cell, then we need to put a markdown cell above it.
+        if (nextCell.cell_type === 'code') {
           nextCell = Jupyter.notebook.insert_cell_above('markdown', nextCellIndex);
         }
       }
       const cellContents = nextCell.get_text();
       const rawButtonMarkdown = '<button>Button</button>';
       const newCellContents = rawButtonMarkdown + cellContents;
+      const newCellId = utils.assignCellId(nextCell);
       nextCell.set_text(newCellContents);
       nextCell.render();
+      let nextCellTerminalConfig = utils.getCellTerminalConfig(nextCell);
+      let buttonsConfig;
+      if (nextCellTerminalConfig === undefined) {
+        nextCellTerminalConfig = {};
+      }
+      buttonsConfig = nextCellTerminalConfig.buttonsConfig;
+      if (buttonsConfig === undefined) {
+        nextCellTerminalConfig.buttonsConfig = [];
+      }
+      nextCellTerminalConfig.buttonsConfig.push({ buttonCellId: newCellId, targetCellId: cellId, command: "ls -l" });
+      utils.assignCellTerminalConfig(nextCell, nextCellTerminalConfig);
+      
       utils.refreshCellMaps();
     },
 
@@ -675,6 +688,7 @@ define ([
       terminals.discoverPwd();
       terminals.createMode = true; // to be controlled by notebook metadata shortly
       terminals.eventsCallback = eventsCallback;
+      console.log('Terminals: initialized.');
     }
 
   }

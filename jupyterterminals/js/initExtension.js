@@ -11,7 +11,6 @@ define([
 
   const initTerminals = () => { 
     Terminals.init();
-    console.log('initTerminals just ran.');
   }
 
   // This ensures Jupyter.kernel.execute works

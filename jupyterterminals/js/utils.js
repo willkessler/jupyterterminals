@@ -150,8 +150,9 @@ define([
     assignCellId: (cell) => {
       const cellId = utils.generateUniqueId();
       if (!cell.metadata.hasOwnProperty('terminalCellId')) {
-        utils.setMetadataCellId(cell.metadata, cellId);
+        return utils.setMetadataCellId(cell.metadata, cellId);
       }
+      return undefined;
     },
 
     assignCellTerminalConfig: (cell, terminalConfig) => {
