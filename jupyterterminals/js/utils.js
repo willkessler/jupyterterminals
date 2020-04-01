@@ -111,25 +111,6 @@ define([
       }
     },
 
-    refreshCodeMirrorSelection: (cell) => {
-      if ((cell.cell_type === 'code') && (cell.selected)) {
-        cm = cell.code_mirror;
-        selections = cm.listSelections();
-        cell.focus_cell();
-        cm.getInputField().focus();
-        cm.setSelections(selections);
-      } 
-    },
-
-    refreshCodeMirrorSelections: () => {
-      const cells = Jupyter.notebook.get_cells();
-      let cm,selections;
-      for (let i = 0; i < cells.length; ++i) {
-        cell = cells[i];
-        utils.refreshCodeMirrorSelection(cell);
-      }       
-    },
-
     clearSelectedCellOutput: () => {
       const selectedCell = Jupyter.notebook.get_selected_cell();
       if (selectedCell !== undefined) {
@@ -148,11 +129,11 @@ define([
 
     // Assign terminal cellIds to any cells that doesn't have one.
     assignCellId: (cell) => {
-      const cellId = utils.generateUniqueId();
       if (!cell.metadata.hasOwnProperty('terminalCellId')) {
+        const cellId = utils.generateUniqueId();
         return utils.setMetadataCellId(cell.metadata, cellId);
       }
-      return undefined;
+      return utils.getMetadataCellId(cell.metadata);
     },
 
     assignCellTerminalConfig: (cell, terminalConfig) => {

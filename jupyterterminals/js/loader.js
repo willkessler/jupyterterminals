@@ -4,7 +4,7 @@
 */
 
 define([], () => {
-  if (window.Graffiti !== undefined) {
+  if (window.Terminals !== undefined) {
     console.log('Terminals already instantiated, not reinitializing');
     return;
   }

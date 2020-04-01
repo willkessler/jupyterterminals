@@ -9,24 +9,16 @@ define([
 ], (Jupyter, Terminals, utils) => {
   console.log('JupyterTerminals loaded:', Terminals);
 
-  const initTerminals = () => { 
-    Terminals.init();
-  }
-
   // This ensures Jupyter.kernel.execute works
   const waitForKernelToBeReady = () => {
     window.Terminals = Terminals;
     
     if (Jupyter.notebook.kernel) {
-      initTerminals();
+      Terminals.init();
     } else {
       Jupyter.notebook.events.on('kernel_ready.Kernel', (e) => {
         console.log('Terminals: kernel ready, possible kernel restart.', e);
         console.log('Terminals: Reloading loader.js');
-        // Prevent double initialization
-        if (!state.getActivity()) {
-          initTerminals();
-        }
         require(['js/loader.js']);
       });
     }

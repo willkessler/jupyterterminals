@@ -45,16 +45,17 @@ define ([
         'pwd',
         { iopub:
                 {
-                  output: (shellOutput) => { 
+                  output: (shellOutput) => {
                     if (shellOutput && shellOutput.content && shellOutput.content.data) {
                       const pathWithTicks = shellOutput.content.data['text/plain']; // for some reason this comes back with single apostrophes around it
                       terminals.discoveredPwd = pathWithTicks.substr(1,pathWithTicks.length-2);
                       terminals.renderAllTerminals(); // only render the terminals after we know the pwd of this notebook
+                      terminals.bindAllControlButtons();
                     }
                   }
                 }
         },
-        { 
+        {
           silent: false
         }
       );
@@ -64,23 +65,23 @@ define ([
       //console.log('makeTerminal,wsUrl:', wsUrl);
       const ws = new WebSocket(wsUrl);
       terminalLib.applyAddon(fit);
-      const term = new terminalLib({ 
-        scrollback: 10000, 
-        theme: { 
+      const term = new terminalLib({
+        scrollback: 10000,
+        theme: {
           foreground:'white',
           background: '#222',
           // foreground: 'black',
           // background: '#eee',
           selection: '#fff',
-          cursor:'#f73', 
-          cursorAccent: '#f22' 
+          cursor:'#f73',
+          cursorAccent: '#f22'
         }
       });
       term.id = terminalId;
       // contents: contains all chars in and out of the terminal over the socket.
       let termObject = {
-        socket: ws, 
-        term: term, 
+        socket: ws,
+        term: term,
         contents: '',
         socketOpen: false,
         sendQueue: [],
@@ -96,7 +97,7 @@ define ([
         termObject.socketOpen = true;
         for (let data of termObject.sendQueue) {
           // Send any commands queued up before the socket was ready, down the pipe
-          ws.send(JSON.stringify(['stdin',data])); 
+          ws.send(JSON.stringify(['stdin',data]));
         }
         term.on('data', function(data) {
           ws.send(JSON.stringify(['stdin', data]));
@@ -105,7 +106,7 @@ define ([
         // term.on('keydown', (data) => {
         //  console.log('keypress data:', data);
         // });
-        
+
         //term.on('scroll', (data) => {
         //console.log('term scroll:', data);
         //});
@@ -114,13 +115,13 @@ define ([
         //   console.log('term selection:', term.getSelection());
         // });
 
-        term.on('focus', () => { 
+        term.on('focus', () => {
           //console.log('Terminals: terminal ' + term.id + ' focused');
           terminals.focusedTerminal = term.id;
         });
 
-        term.on('blur', () => { 
-          // console.log('terminal defocused'); 
+        term.on('blur', () => {
+          // console.log('terminal defocused');
           terminals.focusedTerminal = undefined;
         });
 
@@ -129,7 +130,7 @@ define ([
           if (term.storedYdisp !== undefined) {
             if (term.storedYdisp != checkYdisp) {
               if (terminals.eventsCallback !== undefined) {
-                terminals.eventsCallback({ 
+                terminals.eventsCallback({
                   id: term.id,
                   type: 'refresh',
                   scrollLine: checkYdisp
@@ -157,7 +158,7 @@ define ([
               //console.log('received newCharslength:', newChars.length, newChars);
               termObject.contents += newChars;
               if (terminals.eventsCallback !== undefined) {
-                terminals.eventsCallback({ 
+                terminals.eventsCallback({
                   id: term.id,
                   scrollLine: term.storedYdisp,
                   position: termObject.contents.length,
@@ -195,6 +196,38 @@ define ([
       return contentsPortion;
     },
 
+    handleButtonClick: (terminalCellId, terminalCommand) => {
+      console.log('btn click:', terminalCellId, terminalCommand);
+      const terminal = terminals.terminalsList[terminalCellId];
+      terminal.send(terminalCommand + "\n");
+    },
+
+    bindAllControlButtons: () => {
+      const cells = Jupyter.notebook.get_cells();
+      let cell, config, terminalCellType, renderedHtml, renderedButton, buttonClass, cellElement, innerCell, buttonId, clickFunc;
+      for (let i = 0; i < cells.length; ++i) {
+        cell = cells[i];
+        if (cell.cell_type === 'markdown') {
+          cell.render();
+          config = utils.getCellTerminalConfig(cell);
+          if ((config !== undefined) && (config.type === 'markdown')) {
+            if (config.buttonsConfig !== undefined) {
+              for (let buttonId of Object.keys(config.buttonsConfig)) {
+                cellElement = $(cell.element[0]);
+                renderedHtml = cellElement.find('.rendered_html');
+                buttonClass = '.terminal-button-' + buttonId;
+                renderedButton = renderedHtml.find(buttonClass);
+                clickFunc = () => {
+                  terminals.handleButtonClick(config.buttonsConfig[buttonId].targetCellId, config.buttonsConfig[buttonId].command);
+                };
+                renderedButton.unbind('click').bind('click', clickFunc);
+              }
+            }
+          }
+        }
+      }
+    },
+
     createControlButton: (cellId) => {
       console.log('createControlButton at cellId:',cellId);
       utils.refreshCellMaps();
@@ -214,7 +247,8 @@ define ([
         }
       }
       const cellContents = nextCell.get_text();
-      const rawButtonMarkdown = '<button>Button</button>';
+      const newButtonId = utils.generateUniqueId();
+      const rawButtonMarkdown = '<button class="terminal-button-' + newButtonId + '">Button</button>';
       const newCellContents = rawButtonMarkdown + cellContents;
       const newCellId = utils.assignCellId(nextCell);
       nextCell.set_text(newCellContents);
@@ -222,16 +256,16 @@ define ([
       let nextCellTerminalConfig = utils.getCellTerminalConfig(nextCell);
       let buttonsConfig;
       if (nextCellTerminalConfig === undefined) {
-        nextCellTerminalConfig = {};
+        nextCellTerminalConfig = {
+          type: 'markdown',
+          buttonsConfig: {}
+        };
       }
-      buttonsConfig = nextCellTerminalConfig.buttonsConfig;
-      if (buttonsConfig === undefined) {
-        nextCellTerminalConfig.buttonsConfig = [];
-      }
-      nextCellTerminalConfig.buttonsConfig.push({ buttonCellId: newCellId, targetCellId: cellId, command: "ls -l" });
+      nextCellTerminalConfig.buttonsConfig[newButtonId] = { targetCellId: cellId, command: "ls -l" };
       utils.assignCellTerminalConfig(nextCell, nextCellTerminalConfig);
-      
+
       utils.refreshCellMaps();
+      terminals.bindAllControlButtons();
     },
 
     createTerminalCell: (cellId, config) => {
@@ -254,7 +288,7 @@ define ([
 
         renderArea.html('<div class="graffiti-terminal-container" id="' + terminalContainerId + '" class="container" style="width:100%;height:' + terminalHeight + 'px;"></div>' +
                         '<div class="graffiti-terminal-links">' +
-                           (terminals.createMode ? 
+                           (terminals.createMode ?
                             ' <div class="graffiti-terminal-button-create">' + localizer.getString('CREATE_CONTROL_BUTTON') + '</div>' :
                             '') +
                         ' <div class="graffiti-terminal-go-notebook-dir">' + localizer.getString('JUMP_TO_NOTEBOOK_DIR') + '</div>' +
@@ -265,7 +299,7 @@ define ([
         let host = location.host;
         let path = '/terminals/websocket/';
         if (urlPathName.indexOf('/notebooks/') > 0) {
-          // In cases where Jupyter is hosted on a path-based VM, like on binder.org, we need to extract that path part 
+          // In cases where Jupyter is hosted on a path-based VM, like on binder.org, we need to extract that path part
           // and put it in front of the regular terminals endpoint.
           const parts = urlPathName.split(/\/notebooks\//,2);
           path = (parts[0].length > 0 ? parts[0] + path : path);
@@ -286,7 +320,7 @@ define ([
             const cellDOM = target.parents('.cell');
             const cellId = cellDOM.attr('terminal-cell-id');
             terminals.createControlButton(cellId);
-          });          
+          });
         }
 
         renderArea.find('.graffiti-terminal-container').bind('mousewheel', (e) => {
@@ -339,7 +373,7 @@ define ([
           terminalId: terminalId, // defaults to the terminal cell id, but can be changed if author wants to display the same terminal twice in one notebook.
           startingDirectory: notebookDirectory,
           initialCommand: terminals.defaultTerminalInitialCommand,
-          rows: rows, 
+          rows: rows,
         };
         utils.assignCellTerminalConfig(cell, terminalConfig);
         utils.selectCellByCellId(cellId);
@@ -354,7 +388,7 @@ define ([
         // Create a new terminal id so we'll connect to a fresh socket.
         const term = terminals.terminalsList[cellId].term;
         term.refresh(0,100000);
-        term.focus();        
+        term.focus();
       }
     },
 
@@ -365,7 +399,7 @@ define ([
         const terminalConfig = utils.getCellTerminalConfig(cell);
         if (terminalConfig !== undefined) {
           const deleteAPIEndpoint = location.origin + '/api/terminals/' + terminalConfig.terminalId;
-          const settings = { 
+          const settings = {
             // liberally cribbed from jupyter's codebase,
             // https://github.com/jupyter/notebook/blob/b8b66332e2023e83d2ee04f83d8814f567e01a4e/notebook/static/tree/js/terminallist.js#L110
             processData : false,
@@ -405,7 +439,7 @@ define ([
         // console.log('Terminals: Processing render queue entry, cellId:', cellId, "rq:", rq);
         terminals.createTerminalCell(cellId, rq.config);
         // make sure you can't double click this cell because that would break the terminal
-        $(rq.cell.element[0]).unbind('dblclick').bind('dblclick', ((e) => { 
+        $(rq.cell.element[0]).unbind('dblclick').bind('dblclick', ((e) => {
           e.stopPropagation();
           return false;
         }));
@@ -417,12 +451,14 @@ define ([
       if (cell.cell_type === 'markdown') {
         if (cell.metadata.hasOwnProperty('terminalConfig')) {
           let config = $.extend({}, cell.metadata.terminalConfig);
-          if ((utils.getNotebookTerminalsConfigEntry('singleTerminal') !== undefined) &&
-              (utils.getNotebookTerminalsConfigEntry('singleTerminal') == "true")) { // note that the metadata entry has to be "true", not just true. (double quotes req'd)
-            config.terminalId = utils.getNotebookTerminalsConfigEntry('id');
-            terminals.singleCDCommand = true;
+          if (config.type === 'terminal') {
+            if ((utils.getNotebookTerminalsConfigEntry('singleTerminal') !== undefined) &&
+                (utils.getNotebookTerminalsConfigEntry('singleTerminal') == "true")) { // note that the metadata entry has to be "true", not just true. (double quotes req'd)
+              config.terminalId = utils.getNotebookTerminalsConfigEntry('id');
+              terminals.singleCDCommand = true;
+            }
+            terminals.renderQueue.push({cell: cell, config: config });
           }
-          terminals.renderQueue.push({cell: cell, config: config });
         }
       }
     },
@@ -452,7 +488,7 @@ define ([
       const newContents = opts.terminalsContents[cellId];
       let terminal = terminals.terminalsList[cellId];
       if (terminal === undefined) {
-        console.log('Terminals: cannot find terminal', cellId, 
+        console.log('Terminals: cannot find terminal', cellId,
                     'for sending output, trying to find next terminal from:', opts.nearestCellPosition);
         if (opts.nearestCellPosition === undefined || !opts.useNearestCellPosition) {
           return;
@@ -490,10 +526,10 @@ define ([
           //console.log('setTerminalContents, opts:', opts, 'lastPosition', terminal.lastPosition, 'opts.position', opts.position);
           if (terminal.lastPosition !== opts.position) {
             const newPortion = terminal.contents.substr(terminal.lastPosition, opts.position - terminal.lastPosition);
-            // Replace CR followed by a character NOT a line feed by the non-linefeed char alone. 
+            // Replace CR followed by a character NOT a line feed by the non-linefeed char alone.
             // Sometimes we've gotten this weird situation with terminal recordings and this causes recorded
             // text to write over itself on the same line.
-            const newPortionCleaned = newPortion.replace(/([\x0d])([^\x0a])/g, "$2"); 
+            const newPortionCleaned = newPortion.replace(/([\x0d])([^\x0a])/g, "$2");
             terminal.term.write(newPortionCleaned);
             terminal.lastPosition = opts.position;
             terminal.term.scrollToBottom();
@@ -551,7 +587,7 @@ define ([
             terminal.term.write(terminal.contents);
           }
         }
-      }      
+      }
     },
 
     saveOrRestoreTerminalOutputs: (action) => {
@@ -620,7 +656,7 @@ define ([
           }
         }
       }, terminals.fitRetryTime);
-    },        
+    },
 
     refitAllTerminals: () => {
       let terminal;
@@ -649,8 +685,8 @@ define ([
 
     handleKeydown: (e) => {
       if (terminals.getFocusedTerminal() !== undefined) {
-        // Let any focused terminal handle this event. Don't let jupyter (or anybody else) get it. 
-        e.stopPropagation(); 
+        // Let any focused terminal handle this event. Don't let jupyter (or anybody else) get it.
+        e.stopPropagation();
         return true;
       }
     },
@@ -658,7 +694,7 @@ define ([
     setupTerminalInsertButton: () => {
       const notebook = Jupyter.notebook;
       const terminalHtml = terminals.renderTerminalHtml({width:20});
-      const buttonContents = '<div id="terminal-insert-button" class="btn-group"><button class="btn btn-default" title="' + 
+      const buttonContents = '<div id="terminal-insert-button" class="btn-group"><button class="btn btn-default" title="' +
                              localizer.getString('INSERT_TERMINAL') + '">';
       const setupButtonDiv = $(buttonContents + '<span>' + terminalHtml + '</div></button></span>');
       const jupyterMainToolbar = $('#maintoolbar-container');
