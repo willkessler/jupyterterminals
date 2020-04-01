@@ -196,10 +196,11 @@ define ([
       return contentsPortion;
     },
 
-    handleButtonClick: (terminalCellId, terminalCommand) => {
-      console.log('btn click:', terminalCellId, terminalCommand);
-      const terminal = terminals.terminalsList[terminalCellId];
-      terminal.send(terminalCommand + "\n");
+    handleButtonClick: (opts) => {
+      console.log('btn click:', opts.terminalCellId, opts.terminalCommand, opts.useCr);
+      const terminal = terminals.terminalsList[opts.terminalCellId];
+      const fullCommand = opts.terminalCommand + (opts.useCr ? "\n" : '');
+      terminal.send(fullCommand);
     },
 
     bindAllControlButtons: () => {
@@ -218,7 +219,11 @@ define ([
                 buttonClass = '.terminal-button-' + buttonId;
                 renderedButton = renderedHtml.find(buttonClass);
                 clickFunc = () => {
-                  terminals.handleButtonClick(config.buttonsConfig[buttonId].targetCellId, config.buttonsConfig[buttonId].command);
+                  terminals.handleButtonClick({ 
+                    terminalCellId:  config.buttonsConfig[buttonId].targetCellId,
+                    terminalCommand: config.buttonsConfig[buttonId].command,
+                    useCr:           config.buttonsConfig[buttonId].useCr
+                  });
                 };
                 renderedButton.unbind('click').bind('click', clickFunc);
               }
@@ -261,7 +266,10 @@ define ([
           buttonsConfig: {}
         };
       }
-      nextCellTerminalConfig.buttonsConfig[newButtonId] = { targetCellId: cellId, command: "ls -l" };
+      nextCellTerminalConfig.buttonsConfig[newButtonId] = {
+        targetCellId: cellId,
+        command: "echo \"Change this example echo statement to whatever you want the button to run in the terminal.\"",
+        addCr: "true" };
       utils.assignCellTerminalConfig(nextCell, nextCellTerminalConfig);
 
       utils.refreshCellMaps();
@@ -724,6 +732,11 @@ define ([
       terminals.discoverPwd();
       terminals.createMode = true; // to be controlled by notebook metadata shortly
       terminals.eventsCallback = eventsCallback;
+
+      Jupyter.notebook.events.on('set_dirty.Notebook', (e) => {
+        console.log('dirty notebook');
+      });
+
       console.log('Terminals: initialized.');
     }
 
