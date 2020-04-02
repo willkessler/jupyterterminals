@@ -260,7 +260,7 @@ define ([
       }
       nextCellTerminalConfig.buttonsConfig[newButtonId] = {
         targetCellId: cellId,
-        command: "echo \"Change this example echo statement to whatever you want the button to run in the terminal.\"",
+        command: "echo \"Hello World!\"",
         addCr: "true" };
       utils.assignCellTerminalConfig(nextCell, nextCellTerminalConfig);
 
