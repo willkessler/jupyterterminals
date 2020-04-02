@@ -182,30 +182,23 @@ define ([
       return terminals.focusedTerminal;
     },
 
-    // Get enough content to fill a terminal sufficiently during scrubbing or just starting playback.
-    // We don't restore the entire contents we may have had for the terminal because it could be huge,
-    // but we restore about 4x the terminal contents so you can scroll back a bit and to account for
-    // curses program output and multibyte characters, etc.
-    getContentToFillTerminal: (terminal, contents, contentsPointer) => {
-      const portionMultiplier = 8;
-      const term = terminal.term;
-      const portionLength = (term.rows * term.cols) * portionMultiplier;
-      const contentsPortion = contents.substr(Math.max(0,contentsPointer - portionLength), contentsPointer);
-      //const contentsPortion = contents.substr(0, contentsPointer);
-      //console.log('contentsPointer:', contentsPointer);
-      return contentsPortion;
-    },
-
     handleButtonClick: (opts) => {
-      console.log('btn click:', opts.terminalCellId, opts.terminalCommand, opts.useCr);
-      const terminal = terminals.terminalsList[opts.terminalCellId];
-      const fullCommand = opts.terminalCommand + (opts.useCr ? "\n" : '');
+      const cell = utils.findCellByCellId(opts.sourceCellId);
+      const terminalConfig = utils.getCellTerminalConfig(cell);
+      const buttonId = opts.buttonId;
+      const buttonsConfig = terminalConfig.buttonsConfig[buttonId];
+      const terminalCellId = buttonsConfig.targetCellId;
+      const terminal = terminals.terminalsList[terminalCellId];
+      const terminalCommand = buttonsConfig.command;
+      const addCr = buttonsConfig.addCr;
+      const fullCommand = terminalCommand + (addCr ? "\n" : '');
       terminal.send(fullCommand);
     },
 
     bindAllControlButtons: () => {
       const cells = Jupyter.notebook.get_cells();
-      let cell, config, terminalCellType, renderedHtml, renderedButton, buttonClass, cellElement, innerCell, buttonId, clickFunc;
+      let cell, config, terminalCellType, renderedHtml, renderedButton, buttonClass, cellElement;
+      let innerCell, buttonId, sourceCellId;
       for (let i = 0; i < cells.length; ++i) {
         cell = cells[i];
         if (cell.cell_type === 'markdown') {
@@ -218,14 +211,13 @@ define ([
                 renderedHtml = cellElement.find('.rendered_html');
                 buttonClass = '.terminal-button-' + buttonId;
                 renderedButton = renderedHtml.find(buttonClass);
-                clickFunc = () => {
-                  terminals.handleButtonClick({ 
-                    terminalCellId:  config.buttonsConfig[buttonId].targetCellId,
-                    terminalCommand: config.buttonsConfig[buttonId].command,
-                    useCr:           config.buttonsConfig[buttonId].useCr
-                  });
+                let buttonClickOpts = {
+                  sourceCellId: utils.getMetadataCellId(cell.metadata),
+                  buttonId: buttonId
                 };
-                renderedButton.unbind('click').bind('click', clickFunc);
+                renderedButton.unbind('click').bind('click', () => {
+                  terminals.handleButtonClick(buttonClickOpts);
+                });
               }
             }
           }
@@ -484,81 +476,6 @@ define ([
       terminals.processRenderQueue();
     },
 
-    backupTerminalOutput: (cellId) => {
-      const terminal = terminals.terminalsList[cellId];
-      if (terminal !== undefined) {
-        terminal.contentsBackup = terminal.contents;
-      }
-    },
-
-    setTerminalContents: (opts) => {
-      let cellId = opts.id;
-      const newContents = opts.terminalsContents[cellId];
-      let terminal = terminals.terminalsList[cellId];
-      if (terminal === undefined) {
-        console.log('Terminals: cannot find terminal', cellId,
-                    'for sending output, trying to find next terminal from:', opts.nearestCellPosition);
-        if (opts.nearestCellPosition === undefined || !opts.useNearestCellPosition) {
-          return;
-        }
-        // Try to find a terminal after the nearest cell position. If you find one, dump output into that terminal. This happens because
-        const cells = Jupyter.notebook.get_cells();
-        let i, nearestCell, checkCellId;
-        cellId = undefined;
-        for (i = opts.nearestCellPosition + 1; i < cells.length; ++i) {
-          nearestCell = cells[i];
-          checkCellId = utils.getMetadataCellId(nearestCell.metadata);
-          if (terminals.terminalsList.hasOwnProperty(checkCellId)) {
-            cellId = checkCellId;
-            console.log('Terminals: We found a subsequent terminal and will write output to cell:', cellId);
-            break;
-          }
-        }
-        if (cellId === undefined) {
-          return; // we couldn't find a terminal after the position passed in so we're going to give up and not try to write to any terminal.
-        } else {
-          terminal = terminals.terminalsList[cellId];
-        }
-      }
-      terminal.contents = newContents;
-      let madeUpdateToTerminal = false;
-      if (terminal !== undefined) {
-        let didScroll = false;
-        if (!opts.incremental || opts.firstRecord || terminal.lastPosition === undefined) {
-          terminal.term.reset();
-          const portion = terminals.getContentToFillTerminal(terminal, terminal.contents, opts.position);
-          terminal.term.write(portion);
-          terminal.lastPosition = opts.position;
-          madeUpdateToTerminal = true;
-        } else {
-          //console.log('setTerminalContents, opts:', opts, 'lastPosition', terminal.lastPosition, 'opts.position', opts.position);
-          if (terminal.lastPosition !== opts.position) {
-            const newPortion = terminal.contents.substr(terminal.lastPosition, opts.position - terminal.lastPosition);
-            // Replace CR followed by a character NOT a line feed by the non-linefeed char alone.
-            // Sometimes we've gotten this weird situation with terminal recordings and this causes recorded
-            // text to write over itself on the same line.
-            const newPortionCleaned = newPortion.replace(/([\x0d])([^\x0a])/g, "$2");
-            terminal.term.write(newPortionCleaned);
-            terminal.lastPosition = opts.position;
-            terminal.term.scrollToBottom();
-            didScroll = true;
-            madeUpdateToTerminal = true;
-          }
-        }
-        // Scroll to the correct spot if needed
-        if (!didScroll) {
-          madeUpdateToTerminal = madeUpdateToTerminal || terminals.scrollTerminal(opts);
-        }
-      }
-      return madeUpdateToTerminal;
-    },
-
-    clearTerminalsContentsPositions: () => {
-      for (let cellId of Object.keys(terminals.terminalsList)) {
-        terminals.terminalsList[cellId].lastPosition = undefined;
-      }
-    },
-
     focusTerminal: (cellId) => {
       const termRecord = terminals.terminalsList[cellId];
       if (termRecord !== undefined) {
@@ -583,45 +500,6 @@ define ([
         }
       }
       return false;
-    },
-
-    restoreTerminalOutput: (cellId) => {
-      const terminal = terminals.terminalsList[cellId];
-      if (terminal !== undefined) {
-        if (terminal.contentsBackup !== undefined) {
-          if (terminal.contents != terminal.contentsBackup) {
-            terminal.contents = terminal.contentsBackup;
-            terminal.term.reset();
-            terminal.term.write(terminal.contents);
-          }
-        }
-      }
-    },
-
-    saveOrRestoreTerminalOutputs: (action) => {
-      for (let cellId of Object.keys(terminals.terminalsList)) {
-        if (action === 'save') {
-          terminals.backupTerminalOutput(cellId);
-        } else {
-          terminals.restoreTerminalOutput(cellId);
-        }
-      }
-    },
-
-    getTerminalsStates: (markAsFirstRecord) => {
-      const states = [];
-      for (let cellId of Object.keys(terminals.terminalsList)) {
-        terminal = terminals.terminalsList[cellId];
-        states.push({
-          id: cellId,
-          scrollLine: terminal.term._core.buffer.ydisp,
-          position: terminal.contents.length,
-          isFocused: (terminals.focusedTerminal === cellId),
-          focusedTerminal: terminals.focusedTerminal,
-          firstRecord: markAsFirstRecord,
-        });
-      }
-      return states;
     },
 
     getTerminalContents: (terminalId) => {
@@ -732,10 +610,6 @@ define ([
       terminals.discoverPwd();
       terminals.createMode = true; // to be controlled by notebook metadata shortly
       terminals.eventsCallback = eventsCallback;
-
-      Jupyter.notebook.events.on('set_dirty.Notebook', (e) => {
-        console.log('dirty notebook');
-      });
 
       console.log('Terminals: initialized.');
     }
