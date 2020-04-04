@@ -1,4 +1,4 @@
-# Insert Linux Terminals (Shells) into Jupyter Notebooks
+# Add Linux Terminals, Inline, in Jupyter Notebooks
 
 ### What's This Good For?
 
@@ -94,17 +94,19 @@ This is planned for a future release, however.
 
 ### TODOs
 
-* Make initialCommand actually work
 * Add a global metadata config so we can turn off the display of "Create Control Button" link.
 
 ### Related Software
 
-Inlined Terminals are included by default in Jupyter Graffiti, which
-also allows you to add popup tips to any text in your notebook, and
-create interactive screen recordings to help you teach topics using
-Jupyter Notebooks.
+Inlined Terminals are included by default in <a
+style="font-weight:bold" target="_blank"
+href="https://www.github.com/willkessler/jupytergraffiti">Jupyter
+Graffiti</a>, which also allows you to add popup tips to any text in
+your notebook, and create interactive screen recordings to help you
+teach topics using Jupyter Notebooks.
 
-Take a look at Jupyter Graffiti to learn more about what it can do for
-you!
+Take a look at <a style="font-weight:bold" target="_blank"
+href="https://www.github.com/willkessler/jupytergraffiti">Jupyter
+Graffiti</a> to learn more about what it can do for you!
 
 (Do not use Jupyter Terminals and Jupyter Graffiti at the same time: they will conflict.)

@@ -7,9 +7,6 @@
 // "xterm.js-fit": "https://unpkg.com/xterm@~3.11.0/dist/addons/fit/fit.js"
 // "xterm.js-css": "https://unpkg.com/xterm@~3.11.0/dist/xterm.css"
 
-// TODO:
-// if cell gets deleted, destroy the term (?)
-// add the buttons below terms or ALERT if a terminal cell is not selected already
 
 
 define ([
@@ -23,12 +20,12 @@ define ([
 
     focusedTerminal: undefined,
     discoveredPwd: undefined,
-    singleCDCommand: false,
+    singleInitialCommand: false, // set to true if you want to only send the startup command to the first terminal found
     defaultTerminalRows: 6,
     defaultTerminalInitialCommand: '',
     fitRetryTime: 1000,
     maxRefitAttempts: 10,
-    CDCommandCount: 0,
+    initialCommandCount: 0,
     terminalsList: {},
 
     renderTerminalHtml: (opts) => {
@@ -284,15 +281,15 @@ define ([
         renderArea.html('Loading...' + localizer.getString('EXPLAIN_NON_LOAD'));
 
         const terminalHeight = lineHeight * config.rows; // pixels
-        const terminalContainerId = 'graffiti-terminal-container-' + cellId;
+        const terminalContainerId = 'terminal-container-' + cellId;
 
-        renderArea.html('<div class="graffiti-terminal-container" id="' + terminalContainerId + '" class="container" style="width:100%;height:' + terminalHeight + 'px;"></div>' +
-                        '<div class="graffiti-terminal-links">' +
+        renderArea.html('<div class="terminal-container" id="' + terminalContainerId + '" class="container" style="width:100%;height:' + terminalHeight + 'px;"></div>' +
+                        '<div class="terminal-links">' +
                            (terminals.createMode ?
-                            ' <div class="graffiti-terminal-button-create">' + localizer.getString('CREATE_CONTROL_BUTTON') + '</div>' :
+                            ' <div class="terminal-button-create">' + localizer.getString('CREATE_CONTROL_BUTTON') + '</div>' :
                             '') +
-                        ' <div class="graffiti-terminal-go-notebook-dir">' + localizer.getString('JUMP_TO_NOTEBOOK_DIR') + '</div>' +
-                        ' <div class="graffiti-terminal-reset">' + localizer.getString('RESET_TERMINAL') + '</div>' +
+                        ' <div class="terminal-go-notebook-dir">' + localizer.getString('JUMP_TO_NOTEBOOK_DIR') + '</div>' +
+                        ' <div class="terminal-reset">' + localizer.getString('RESET_TERMINAL') + '</div>' +
                         '</div>').show();
 
         const urlPathName = location.pathname;
@@ -307,7 +304,7 @@ define ([
         const wsUrl = location.protocol.replace('http', 'ws') + '//' + location.host + path + config.terminalId;
         const elem = $('#' + terminalContainerId);
         const sizeObj = {cols:40, rows:10};
-        renderArea.find('.graffiti-terminal-reset').click((e) => {
+        renderArea.find('.terminal-reset').click((e) => {
           const target = $(e.target);
           const cellDOM = target.parents('.cell');
           const cellId = cellDOM.attr('terminal-cell-id');
@@ -315,7 +312,7 @@ define ([
         });
 
         if (terminals.createMode) {
-          renderArea.find('.graffiti-terminal-button-create').click((e) => {
+          renderArea.find('.terminal-button-create').click((e) => {
             const target = $(e.target);
             const cellDOM = target.parents('.cell');
             const cellId = cellDOM.attr('terminal-cell-id');
@@ -323,7 +320,7 @@ define ([
           });
         }
 
-        renderArea.find('.graffiti-terminal-container').bind('mousewheel', (e) => {
+        renderArea.find('.terminal-container').bind('mousewheel', (e) => {
           //console.log('xterm mousewheel',e.originalEvent.wheelDeltaY); // looks like values about 10 move one line...
         });
 
@@ -337,19 +334,23 @@ define ([
           // https://stackoverflow.com/questions/23162299/how-to-get-the-last-part-of-dirname-in-bash
           const cdCommand = "" + 'if test -d ' + terminals.discoveredPwd + '; then cd ' + terminals.discoveredPwd + "; fi" +
                             "&& clear\n";
-          if (!terminals.singleCDCommand || (terminals.singleCDCommand && terminals.CDCommandCount < 1)) {
-            newTerminal.send(cdCommand);
-            terminals.CDCommandCount++;
+          let fullCommand = cdCommand;
+          if ((config.initialCommand !== undefined) && (config.initialCommand.length > 0)) {
+            fullCommand += config.initialCommand + "\n";
+          }
+          if (!terminals.singleInitialCommand || (terminals.singleInitialCommand && terminals.initialCommandCount < 1)) {
+            newTerminal.send(fullCommand);
+            terminals.initialCommandCount++;
           }
           let resetCdCommand = cdCommand;
-          renderArea.find('.graffiti-terminal-go-notebook-dir').click((e) => {
+          renderArea.find('.terminal-go-notebook-dir').click((e) => {
             if (terminals.discoveredPwd !== undefined) {
               resetCdCommand = "" + 'cd ' + terminals.discoveredPwd + "&& clear\n";
             }
             newTerminal.send(resetCdCommand);
           });
         } else {
-          renderArea.find('.graffiti-terminal-go-notebook-dir').hide(); // if this link is inactive, just hide it.
+          renderArea.find('.terminal-go-notebook-dir').hide(); // if this link is inactive, just hide it.
         }
 
         return newTerminal;

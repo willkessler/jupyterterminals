@@ -8,42 +8,39 @@
   padding:2px 0 0 0px;
 }
 
-.graffiti-terminal-container {
+.terminal-container {
   border: 1px solid #cfcfcf;
 }
 
-.graffiti-terminal-button-create {
-}
-
-.graffiti-terminal-links {
+.terminal-links {
   display:flex;
   justify-content:flex-end;
 }
 
-.graffiti-terminal-links div {
+.terminal-links div {
   text-decoration:underline;
   cursor:pointer;
   margin-right:10px;
 }
 
-#graffiti-terminal-builder {
+#terminal-builder {
   margin-top:10px !important;
   padding-top:5px;
   border-top:1px dotted grey;
 }
 
-#graffiti-terminal-builder button {
+#terminal-builder button {
   font-size:0.8em;
   padding:2px;
 }
 
-#graffiti-terminal-builder button {
+#terminal-builder button {
   font-size:1.0em !important;
   margin-top:5px;
   margin-left:5px;
 }
 
-#graffiti-terminal-builder {
+#terminal-builder {
   font-color:#666;
   text-align:left;
   width:100%;
@@ -52,24 +49,24 @@
   font-size:.8em;
 }
 
-#graffiti-terminal-builder-header {
+#terminal-builder-header {
   text-transform:uppercase;
   margin-bottom:2px;
   display:flex;
   cursor:pointer;
 }
 
-#graffiti-terminal-builder-body > div {
+#terminal-builder-body > div {
   display:flex;
 }
 
-#graffiti-terminal-builder-body > div > div {
+#terminal-builder-body > div > div {
   padding:6px;
   margin:4px;
   border:1px dashed grey;
   cursor:pointer;
 }
 
-#graffiti-terminal-builder-body > div > div:hover {
+#terminal-builder-body > div > div:hover {
   border:1px solid red;
 }
