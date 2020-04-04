@@ -23,6 +23,26 @@ terminal go back to the directory where the notebook is located.
 
 [ _Please note: Each terminal cell is connected to a separate bash shell. You can see these terminals in Jupyter's "Running" tab.  If you reload the notebook, you will connect to the same Jupyter terminals you loaded earlier, with their history intact (although you may not see the previous output in that terminal).  If you delete a terminal cell, the Jupyter terminal will continue to live for the life of the server until you shut it down from the "Running" tab._]
 
+To configure the terminal cell you can edit its metadata. It will look something like this:
+
+```
+{
+  "terminalCellId": "id_5gnrnaq",
+  "terminalConfig": {
+    "initialCommand": "",
+    "rows": 6,
+    "startingDirectory": "samples/ai_on_edge",
+    "terminalId": "id_j4fpm1t",
+    "type": "terminal"
+  }
+}
+```
+
+* You can set the number of rows displayed for the terminal with the `rows` field. 
+* You can set an initial command to run every time the terminal loads, with the `initialCommand` field. (Note that a carriage return will be added to this command automatically.)
+* You can set the startingDirectory for this terminal, to something other than the one containing this notebook.
+* Do not change the `terminalId` or `type` fields.
+
 ### Terminal Control Buttons
 
 ![buttons_movie](./readme_gifs/buttons.gif)
@@ -57,10 +77,11 @@ the cell containing the button. You will find metadata like the following:
 ```
 
 Each button you create will have an entry in the metadata you can
-modify to set the command the button runs in the terminal.  If `addCr`
-is true, then the plugin will also add a carriage return after the
-command when it is sent to the terminal.  The `targetCellId` is the ID
-of the terminal that the button will send the command to. By default
+modify to set the command the button runs in the terminal.  
+
+* If `addCr` is true, then the plugin will also add a carriage return after the
+command when it is sent to the terminal.  
+* The `targetCellId` is the ID of the terminal that the button will send the command to. By default
 this is the terminal you used to create the button in the first place.
 
 If you want to create more than one button to control a terminal, you
