@@ -23,6 +23,7 @@ define ([
     singleInitialCommand: false, // set to true if you want to only send the startup command to the first terminal found
     defaultTerminalRows: 6,
     defaultTerminalInitialCommand: '',
+    defaultButtonCommand: 'echo "Hello World"',
     fitRetryTime: 1000,
     maxRefitAttempts: 10,
     initialCommandCount: 0,
@@ -257,7 +258,7 @@ define ([
       }
       nextCellTerminalConfig.buttonsConfig[newButtonId] = {
         targetCellId: cellId,
-        command: "echo \"Hello World!\"",
+        command: terminals.defaultButtonCommand,
         addCr: "true" };
       utils.assignCellTerminalConfig(nextCell, nextCellTerminalConfig);
 
@@ -359,7 +360,7 @@ define ([
       }
     },
 
-    createTerminalInCell: (cell, terminalId, desiredRows) => {
+    createTerminalInCell: (cell, terminalId, desiredRows, initialCommand) => {
       utils.assignCellId(cell); // make sure a new cell has a terminal cell id.
       utils.refreshCellMaps();
       const cellId = utils.getMetadataCellId(cell.metadata);
@@ -373,7 +374,7 @@ define ([
           type : 'terminal',
           terminalId: terminalId, // defaults to the terminal cell id, but can be changed if author wants to display the same terminal twice in one notebook.
           startingDirectory: notebookDirectory,
-          initialCommand: terminals.defaultTerminalInitialCommand,
+          initialCommand: initialCommand,
           rows: rows,
         };
         utils.assignCellTerminalConfig(cell, terminalConfig);
@@ -398,8 +399,10 @@ define ([
         const fetchParams = { method: 'delete', credentials: 'include',  };
         const cell = utils.findCellByCellId(cellId);
         const terminalConfig = utils.getCellTerminalConfig(cell);
+        let terminalInitialCommand = terminals.defaultTerminalInitialCommand;
         if (terminalConfig !== undefined) {
           const deleteAPIEndpoint = location.origin + '/api/terminals/' + terminalConfig.terminalId;
+          terminalInitialCommand = terminalConfig.initialCommand;
           const settings = {
             // liberally cribbed from jupyter's codebase,
             // https://github.com/jupyter/notebook/blob/b8b66332e2023e83d2ee04f83d8814f567e01a4e/notebook/static/tree/js/terminallist.js#L110
@@ -414,8 +417,9 @@ define ([
           jupyterUtils.ajax(deleteAPIEndpoint, settings);
         }
         const currentRows = terminals.terminalsList[cellId].term.rows;
+        const currentInitialCommand = terminals.terminalsList[cellId].term.initialCommand;
         delete(terminals.terminalsList[cellId]);
-        terminals.createTerminalInCell(cell, utils.generateUniqueId(), currentRows );
+        terminals.createTerminalInCell(cell, utils.generateUniqueId(), currentRows, terminalInitialCommand );
         utils.saveNotebookDebounced();
       }
     },
@@ -428,7 +432,7 @@ define ([
     createTerminalCellBelowSelectedCell: () => {
       const newTerminalCell = Jupyter.notebook.insert_cell_below('markdown');
       if (newTerminalCell !== undefined) {
-        return terminals.createTerminalInCell(newTerminalCell, utils.generateUniqueId(), terminals.defaultTerminalRows );
+        return terminals.createTerminalInCell(newTerminalCell, utils.generateUniqueId(), terminals.defaultTerminalRows, terminals.defaultTerminalInitialCommand );
       }
       return undefined;
     },
