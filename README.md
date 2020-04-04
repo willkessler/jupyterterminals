@@ -1,5 +1,7 @@
 # Add Linux Terminals, Inline, in Jupyter Notebooks
 
+![intro_movie](./readme_gifs/intro.gif)
+
 ### What's This Good For?
 
 Using this plugin, you can insert terminal cells (shells) using a
@@ -22,6 +24,8 @@ terminal go back to the directory where the notebook is located.
 [ _Please note: Each terminal cell is connected to a separate bash shell. You can see these terminals in Jupyter's "Running" tab.  If you reload the notebook, you will connect to the same Jupyter terminals you loaded earlier, with their history intact (although you may not see the previous output in that terminal).  If you delete a terminal cell, the Jupyter terminal will continue to live for the life of the server until you shut it down from the "Running" tab._]
 
 ### Terminal Control Buttons
+
+![buttons_movie](./readme_gifs/buttons.gif)
 
 You can also add buttons to markdown cells that can send commands to
 terminals. This may be useful when you're teaching a topic and want to

@@ -616,6 +616,10 @@ define ([
       terminals.createMode = true; // to be controlled by notebook metadata shortly
       terminals.eventsCallback = eventsCallback;
 
+      Jupyter.notebook.events.on('rendered.MarkdownCell', (e, results) => {
+        terminals.bindAllControlButtons();
+      });
+
       console.log('Terminals: initialized.');
     }
 
