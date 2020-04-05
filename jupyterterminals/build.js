@@ -19,6 +19,6 @@
     },
     onBuildWrite: function (moduleName, path, contents) {
         // Requirejs optimizer gives a module name("main") to entrypoint file which doesn't work in Jupyter environment
-        return contents.replace("define('main'", "define('nbextensions/graffiti-dist/graffiti'");
+        return contents.replace("define('main'", "define('nbextensions/terminals-dist/terminals'");
     },
 });

@@ -65,9 +65,9 @@ define([
 
       const notebook = Jupyter.notebook;
       localizer.setLanguage('EN');
-      if (notebook.metadata.hasOwnProperty('graffiti')) {
-        if (notebook.metadata.graffiti.hasOwnProperty('language')) {
-          localizer.setLanguage(notebook.metadata.graffiti.language);
+      if (notebook.metadata.hasOwnProperty('terminals')) {
+        if (notebook.metadata.terminals.hasOwnProperty('language')) {
+          localizer.setLanguage(notebook.metadata.terminals.language);
         }
       }
 

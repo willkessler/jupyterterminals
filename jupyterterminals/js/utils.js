@@ -70,8 +70,8 @@ define([
       return codeCommentString;
     },
 
-    // These two functions help us translate between what we store in the notebook json itself ('graffitiCellId') and how we use it in the code, just as 'cellId'.
-    // This was done to make our tags less likely to collide with other Jupyter plugins, but we wanted to keep the field name short in the Graffiti code.
+    // These two functions help us translate between what we store in the notebook json itself ('terminalCellId') and how we use it in the code, just as 'cellId'.
+    // This was done to make our tags less likely to collide with other Jupyter plugins, but we wanted to keep the field name short in the Terminals code.
     getMetadataCellId: (metadata) => {
       return metadata.terminalCellId;
     },
@@ -181,7 +181,7 @@ define([
         cells: Jupyter.notebook.get_cells(),
         maps: {}
       }
-      let cell, cellId, cellDOM, tagsRe,graffitiId, cellKeys = Object.keys(utils.cellMaps.cells);
+      let cell, cellId, cellDOM, cellKeys = Object.keys(utils.cellMaps.cells);
       for (let cellIndex = 0; cellIndex < cellKeys.length; ++cellIndex) {
         cell = utils.cellMaps.cells[cellIndex];
         cellId = utils.getMetadataCellId(cell.metadata);
@@ -200,15 +200,6 @@ define([
           cellDOM.attr({ 'terminal-cell-id' : utils.getMetadataCellId(cell.metadata)});
         }
       }
-    },
-
-    findCellIdByLocationMap: (recordingCellId, recordingKey) => {
-      const graffitiId = recordingCellId + '_' + recordingKey;
-      if (utils.cellMaps.location[graffitiId] !== undefined) {
-        return utils.cellMaps.location[graffitiId];
-      }
-
-      return undefined;
     },
 
     findCellIndexByCellId: (cellId) => {
@@ -468,37 +459,12 @@ define([
       return false;
     },
 
-    createApiSymlink: () => {
-      if (!utils.isUdacityEnvironment()) {
-        return;
-      }
-      // Create a symlink to get 'import jupytergraffiti' working in Udacity environment
-      const graffitiPath = '/opt/workspace-jupyter-graffiti/jupytergraffiti';
-      const createSymlinkCmd = `ln -sf ${graffitiPath} jupytergraffiti`;
-
-      // Create a python file and execute the file 
-      let importApiScript = '';
-      // Adding /opt/jupytergraffiti to system path allows us to import it as a python module
-      importApiScript += 'import sys\\n';
-      importApiScript += 'api_path="'+ graffitiPath +'"\\n';
-      importApiScript += 'if api_path not in sys.path:\\n';
-      importApiScript += '  sys.path.insert(0,api_path)\\n';
-      const executePythonScript = `!${createSymlinkCmd} && echo '${importApiScript}' > /tmp/graffiti-symlink.py && python /tmp/graffiti-symlink.py`;
-      const scriptOptions = {
-        silent: false,
-        store_history: false,
-        stop_on_error : true
-      }
-      
-      Jupyter.notebook.kernel.execute(executePythonScript, undefined, scriptOptions);
-    },
-
     // Detect if operating system is Windows. This method will only work on notebooks with python kernels!
     onWindowsOS: () => {
       const platform = navigator.platform;
       if ((platform.indexOf('Win') === 0) ||
           (platform.indexOf('win') === 0)) {
-        console.log('Graffiti: Windows OS detected.');
+        console.log('Terminals: Windows OS detected.');
         return true;
       }
       return false;
