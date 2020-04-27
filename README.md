@@ -101,6 +101,31 @@ the plugin in them. When you distribute notebooks with Jupyter
 Terminals, the recipient will also need to install the plugin to see
 (and use) them.
 
+### Trying it out safely
+
+If you want to just try out the plugin without installing it you can just this Binder link:
+
+* [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/willkessler/jupyterterminals/master) <a href="https://mybinder.org/v2/gh/willkessler/jupyterterminals/master">Jupyter Terminals Demo</a>
+
+Or, you can try a local Docker setup:
+
+```
+jupyterterminals/build_and_run.sh -p 9991
+```
+
+and then surf to `http://localhost:9991?token=<token>` and provide the token shown in Docker's output (which will look something like this):
+
+```
+ To access the notebook, open this file in a browser:
+        file:///home/jovyan/.local/share/jupyter/runtime/nbserver-6-open.html
+    Or copy and paste one of these URLs:
+        http://cdb36b52eeac:8888/?token=d662c994e7f5ae76dbf3e05f95a4fc1a435ec46475e184f8
+     or http://127.0.0.1:8888/?token=d662c994e7f5ae76dbf3e05f95a4fc1a435ec46475e184f8
+```
+
+In the example output above,  you wouldn't do what Jupyter is telling you, because 8888 is not the port you just provided. 9991 is the port you passed to 
+the `build_and_run.sh` script, so you want to surf to http://127.0.0.1:9991/?token=d662c994e7f5ae76dbf3e05f95a4fc1a435ec46475e184f8.  Then you can just 
+create a notebook as you normally would to try out the plugin.
 
 ### Installation
 
