@@ -19,6 +19,7 @@ define([
       Jupyter.notebook.events.on('kernel_ready.Kernel', (e) => {
         console.log('Terminals: kernel ready, possible kernel restart.', e);
         console.log('Terminals: Reloading loader.js');
+        Terminals.init();
         require(['js/loader.js']);
       });
     }
