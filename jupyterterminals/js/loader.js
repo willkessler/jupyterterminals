@@ -8,5 +8,5 @@ define([], () => {
     console.log('Terminals already instantiated, not reinitializing');
     return;
   }
-  require(['/nbextensions/jupyterterminals/js/initExtension.js']);
+  require(['jupyterterminals/js/initExtension.js']);
 });

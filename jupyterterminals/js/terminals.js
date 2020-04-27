@@ -11,10 +11,10 @@
 
 define ([
   'base/js/utils',
-  '/nbextensions/jupyterterminals/js/utils.js',
-  '/nbextensions/jupyterterminals/js/localizer.js',
-  '/nbextensions/jupyterterminals/js/xterm/xterm.js',
-  '/nbextensions/jupyterterminals/js/xterm/addons/fit/fit.js',
+  'jupyterterminals/js/utils.js',
+  'jupyterterminals/js/localizer.js',
+  'jupyterterminals/js/xterm/xterm.js',
+  'jupyterterminals/js/xterm/addons/fit/fit.js',
 ], (jupyterUtils, utils, localizer, terminalLib, fit) => {
   const terminals = {
 
@@ -606,8 +606,8 @@ define ([
       localizer.init();
 
       utils.loadCss([
-        '/nbextensions/jupyterterminals/css/terminals.css',
-        '/nbextensions/jupyterterminals/css/xterm.css'
+        'jupyterterminals/css/terminals.css',
+        'jupyterterminals/css/xterm.css'
       ]);
 
       terminals.setupTerminalInsertButton();

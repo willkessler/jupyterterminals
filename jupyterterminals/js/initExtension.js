@@ -4,8 +4,8 @@
 
 define([
   'base/js/namespace',
-  '/nbextensions/jupyterterminals/js/terminals.js',
-  '/nbextensions/jupyterterminals/js/utils.js',
+  'jupyterterminals/js/terminals.js',
+  'jupyterterminals/js/utils.js',
 ], (Jupyter, Terminals, utils) => {
   console.log('JupyterTerminals loaded:', Terminals);
 
