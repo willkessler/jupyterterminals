@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euxo pipefail
+
+exec >> postBuild_output.txt
+exec 2>&1
+
+pushd jupyterterminals
+npm install && npm run build && \
+    jupyter nbextension install terminals-dist --user && \
+    jupyter nbextension enable terminals-dist/terminals
+popd
+
+pip install nbzip
+jupyter serverextension enable --py nbzip --sys-prefix
+jupyter nbextension install --py nbzip --user
+jupyter nbextension enable --py nbzip
