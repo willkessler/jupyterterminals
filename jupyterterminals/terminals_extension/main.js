@@ -6,7 +6,7 @@ window.Terminals = null;
 define([], () => {
   return {
     load_ipython_extension: () => {
-      require(['/nbextensions/jupyterterminals/js/initExtension.js']);
+      require(['js/initExtension.js']);
     }
   };
 });

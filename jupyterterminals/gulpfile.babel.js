@@ -35,7 +35,7 @@ const paths = {
 export function main() {
   return gulp.src(paths.main.src) 
              .pipe(babel())
-             .pipe(replace(/\/nbextensions\/jupyterterminals\/js/gm, function() {
+             .pipe(replace(/\jupyterterminals\/js/gm, function() {
                return('js');
              }))
              .pipe(gulp.dest(paths.main.dest));
@@ -44,7 +44,7 @@ export function main() {
 export function jsFiles() {
   return  gulp.src(paths.jsFiles.src)
               .pipe(babel())
-              .pipe(replace(/\/nbextensions\/jupyterterminals\/js/gm, function() {
+              .pipe(replace(/jupyterterminals\/js/gm, function() {
                 return('js');
               }))
               .pipe(gulp.dest(paths.jsFiles.dest));
@@ -52,8 +52,8 @@ export function jsFiles() {
 
 export function moveStyles() {
   return gulp.src(paths.moveStyles.src)
-             .pipe(replace(/\/nbextensions\/jupyterterminals\/css/gm, function() {
-               return '/nbextensions/graffiti-dist';
+             .pipe(replace(/jupyterterminals\/css/gm, function() {
+               return '/nbextensions/terminals-dist';
              }))
              .pipe(gulp.dest(paths.moveStyles.dest));
 }
@@ -61,7 +61,7 @@ export function moveStyles() {
 export function pipMain() {
   return gulp.src(paths.pipMain.src) 
              .pipe(babel())
-             .pipe(replace(/\/nbextensions\/jupyterterminals\/js/gm, function() {
+             .pipe(replace(/jupyterterminals\/js/gm, function() {
                return('js');
              }))
              .pipe(gulp.dest(paths.pipMain.dest));
@@ -70,7 +70,7 @@ export function pipMain() {
 export function pipJsFiles() {
   return  gulp.src(paths.pipJsFiles.src)
               .pipe(babel())
-              .pipe(replace(/\/nbextensions\/jupyterterminals\/js/gm, function() {
+              .pipe(replace(/jupyterterminals\/js/gm, function() {
                 return('js');
               }))
               .pipe(gulp.dest(paths.pipJsFiles.dest));
@@ -78,7 +78,7 @@ export function pipJsFiles() {
 
 export function pipMoveStyles() {
   return gulp.src(paths.pipMoveStyles.src)
-             .pipe(replace(/\/nbextensions\/jupyterterminals\/css/gm, function() {
+             .pipe(replace(/jupyterterminals\/css/gm, function() {
                return '/nbextensions/jupyterterminals';
              }))
              .pipe(gulp.dest(paths.pipMoveStyles.dest));
