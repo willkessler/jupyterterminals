@@ -17,7 +17,7 @@ WORKDIR /home/jovyan/work
 
 # Build commands (for reference):
 # docker build . -t jupyterterminals
-# docker run --rm -p 8888:8888 -e JUPYTER_LAB_ENABLE=yes -v "$PWD":/home/jovyan jupytergraffiti
+# docker run --rm -p 8888:8888 -e JUPYTER_LAB_ENABLE=yes -v "$PWD":/home/jovyan jupyterterminals
 # Build bundle (for reference):
 # RUN cd /opt/jupyterterminals && npm install && npm run build && \
 #       jupyter nbextension install terminals-dist && jupyter nbextension enable terminals-dist/terminals
