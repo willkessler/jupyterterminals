@@ -105,7 +105,7 @@ Terminals, the recipient will also need to install the plugin to see
 
 If you want to just try out the plugin without installing it you can just this Binder link:
 
-* [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/willkessler/jupyterterminals/master) <a href="https://mybinder.org/v2/gh/willkessler/jupyterterminals/master">Jupyter Terminals Demo</a>
+* [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/willkessler/jupyterterminals/master?filepath=samples%2FJupyterTerminalsDemo.ipynb) <a href="https://mybinder.org/v2/gh/willkessler/jupyterterminals/master?filepath=samples%2FJupyterTerminalsDemo.ipynb">Jupyter Terminals Demo</a>
 
 Or, you can try a local Docker setup:
 
