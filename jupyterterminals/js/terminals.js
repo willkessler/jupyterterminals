@@ -237,13 +237,16 @@ define ([
         const nextCellIndex = cellIndex + 1;
         nextCell = Jupyter.notebook.get_cell(nextCellIndex);
         // Make sure the next cell is a markdown cell, where we can insert a button. If it's a code cell, then we need to put a markdown cell above it.
-        if (nextCell.cell_type === 'code') {
+        // If the next cell already has a terminal in it, then also insert a markdown cell above it first.
+        const config = utils.getCellTerminalConfig(nextCell);
+        if (((config !== undefined) && (config.type === 'terminal')) ||
+            (nextCell.cell_type === 'code')) {
           nextCell = Jupyter.notebook.insert_cell_above('markdown', nextCellIndex);
         }
       }
       const cellContents = nextCell.get_text();
       const newButtonId = utils.generateUniqueId();
-      const rawButtonMarkdown = '<button class="terminal-button-' + newButtonId + '">Button</button>';
+      const rawButtonMarkdown = '<button class="terminal-button-' + newButtonId + '">Run Command</button>';
       const newCellContents = rawButtonMarkdown + cellContents;
       const newCellId = utils.assignCellId(nextCell);
       nextCell.set_text(newCellContents);
