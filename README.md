@@ -5,7 +5,7 @@
 ### What's This Good For?
 
 Using this plugin, you can insert terminal cells (shells) using a
-button added to your Jupyter toolbar.  This is useful for teaching (We
+button added to your Jupyter toolbar.  This is useful for teaching (we
 use the facility at Udacity), or anywhere where you just want a
 convenient interactive shell terminal inlined with the rest of your
 Jupyter notebook cells. (Normally to access terminals in Jupyter, you
@@ -92,7 +92,7 @@ to the button will reveal to you its ID. For instance, for the button
 shown above,
 
 ```
-<button class="terminal-button-id_kk1vk6w">Button</button>
+<button class="terminal-button-id_kk1vk6w">Run Command</button>
 ```
 
 If you don't have the plugin installed, then terminal cells will
@@ -110,7 +110,7 @@ If you want to just try out the plugin without installing it you can just this B
 Or, you can try a local Docker setup:
 
 ```
-jupyterterminals/build_and_run.sh -p 9991
+jupyterterminals/build_and_run.sh 9991
 ```
 
 and then surf to `http://localhost:9991?token=<token>` and provide the token shown in Docker's output (which will look something like this):
@@ -123,8 +123,8 @@ and then surf to `http://localhost:9991?token=<token>` and provide the token sho
      or http://127.0.0.1:8888/?token=d662c994e7f5ae76dbf3e05f95a4fc1a435ec46475e184f8
 ```
 
-In the example output above,  you wouldn't do what Jupyter is telling you, because 8888 is not the port you just provided. 9991 is the port you passed to 
-the `build_and_run.sh` script, so you want to surf to http://127.0.0.1:9991/?token=d662c994e7f5ae76dbf3e05f95a4fc1a435ec46475e184f8.  Then you can just 
+In the example output above,  you wouldn't do what Jupyter is telling you, because 8888 is not the port you just provided. Since `9991` is the port you passed to 
+the `build_and_run.sh` script, so you will want to surf to `http://127.0.0.1:9991/?token=d662c994e7f5ae76dbf3e05f95a4fc1a435ec46475e184f8`.  Then you can just 
 create a notebook as you normally would to try out the plugin.
 
 ### Installation
